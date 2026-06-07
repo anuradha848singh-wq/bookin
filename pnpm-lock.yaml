@@ -397,6 +397,9 @@ importers:
       '@book-in/config':
         specifier: workspace:*
         version: link:../config
+      '@book-in/db':
+        specifier: workspace:*
+        version: link:../db
       '@supabase/supabase-js':
         specifier: ^2.39.0
         version: 2.106.2
