@@ -1,0 +1,17 @@
+export const T = {
+  red:       "#E8281F",
+  redLight:  "#FFF0EF",
+  redPale:   "#FEE2E2",
+  dark:      "#0F172A",
+  mid:       "#1E293B",
+  body:      "#374151",
+  muted:     "#64748B",
+  border:    "#E5E7EB",
+  divider:   "#F1F5F9",
+  bg:        "#FAFAFA",
+  white:     "#FFFFFF",
+  darkBg:    "#0F172A",
+  darkCard:  "#1E293B",
+  darkBorder:"#334155",
+  darkMuted: "#94A3B8",
+};

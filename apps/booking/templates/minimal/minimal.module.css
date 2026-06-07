@@ -1,0 +1,111 @@
+.template {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+  font-family: var(--font-family-base);
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+}
+
+.logo {
+  width: auto;
+  height: 3rem;
+  max-width: 200px;
+  object-fit: contain;
+}
+
+.clinicName {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0;
+  background: linear-gradient(135deg, var(--primary, #4F46E5), var(--primary-dark, #4338CA));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.tagline {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  margin: 0;
+  max-width: 500px;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 0 var(--space-4) var(--space-8);
+}
+
+.card {
+  width: 100%;
+  max-width: 700px;
+  background: white;
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-xl);
+  padding: var(--space-8);
+  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stepContent {
+  margin-top: var(--space-6);
+}
+
+.footer {
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+}
+
+.poweredBy {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+  margin: 0;
+}
+
+.poweredBy strong {
+  color: var(--primary, var(--color-primary-600));
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .card {
+    padding: var(--space-6);
+    border-radius: var(--radius-xl);
+  }
+
+  .clinicName {
+    font-size: var(--font-size-2xl);
+  }
+
+  .header {
+    padding: var(--space-6) var(--space-4);
+  }
+}
+
+@media (max-width: 375px) {
+  .card {
+    padding: var(--space-4);
+  }
+}

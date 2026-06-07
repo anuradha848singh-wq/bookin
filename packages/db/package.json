@@ -1,0 +1,23 @@
+{
+  "name": "@book-in/db",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "prisma:generate": "prisma generate",
+    "postinstall": "prisma generate",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.12.1",
+    "@book-in/config": "workspace:*",
+    "@book-in/lib": "workspace:*"
+  },
+  "devDependencies": {
+    "prisma": "^5.12.1",
+    "typescript": "^5.1.3",
+    "@types/node": "^20.0.0"
+  }
+}

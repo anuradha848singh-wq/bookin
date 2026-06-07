@@ -1,0 +1,107 @@
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-6) 0;
+  position: relative;
+}
+
+.progressLine {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--color-border);
+  transform: translateY(-50%);
+  z-index: 1;
+}
+
+.progressFill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--primary, var(--color-primary-600));
+  transition: width var(--transition-slow);
+}
+
+.steps {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 400px;
+  position: relative;
+  z-index: 2;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.stepCircle {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  border: 3px solid var(--color-border);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-base);
+  color: var(--color-text-tertiary);
+  transition: all var(--transition-base);
+}
+
+.step.active .stepCircle {
+  background: var(--primary, var(--color-primary-600));
+  border-color: var(--primary, var(--color-primary-600));
+  color: white;
+  box-shadow: 0 0 0 4px var(--primary-light, var(--color-primary-50));
+  transform: scale(1.1);
+}
+
+.step.completed .stepCircle {
+  background: var(--color-success-500);
+  border-color: var(--color-success-500);
+  color: white;
+}
+
+.stepLabel {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-tertiary);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.step.active .stepLabel {
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.step.completed .stepLabel {
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 768px) {
+  .stepLabel {
+    display: none;
+  }
+
+  .steps {
+    max-width: 300px;
+  }
+
+  .stepCircle {
+    width: 2rem;
+    height: 2rem;
+    font-size: var(--font-size-sm);
+  }
+}

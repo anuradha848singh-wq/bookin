@@ -1,0 +1,239 @@
+.template {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #F8FAFC;
+  font-family: var(--font-family-base);
+}
+
+.topBar {
+  background: white;
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-3) var(--space-4);
+}
+
+.trustBadges {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-4);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  padding: var(--space-1) var(--space-3);
+  background: var(--color-success-50);
+  border-radius: var(--radius-full);
+}
+
+.header {
+  background: white;
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-6) var(--space-4);
+}
+
+.headerContent {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.logoContainer {
+  flex-shrink: 0;
+  width: 4rem;
+  height: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-light, var(--color-primary-50));
+  border-radius: var(--radius-xl);
+  padding: var(--space-2);
+}
+
+.logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.headerText {
+  flex: 1;
+}
+
+.clinicName {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--primary, var(--color-primary-600));
+  margin: 0;
+}
+
+.tagline {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin: var(--space-1) 0 0;
+}
+
+.main {
+  flex: 1;
+  padding: var(--space-8) var(--space-4);
+}
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: var(--space-8);
+  align-items: start;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  position: sticky;
+  top: var(--space-4);
+}
+
+.infoCard {
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+}
+
+.infoTitle {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-3);
+}
+
+.infoList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.infoList li {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  padding-left: var(--space-6);
+  position: relative;
+}
+
+.infoList li::before {
+  content: '○';
+  position: absolute;
+  left: 0;
+  color: var(--color-text-tertiary);
+}
+
+.infoList li.completed {
+  color: var(--color-success-600);
+  font-weight: var(--font-weight-medium);
+}
+
+.infoList li.completed::before {
+  content: '✓';
+  color: var(--color-success-600);
+}
+
+.infoText {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-relaxed);
+  margin: 0;
+}
+
+.content {
+  min-height: 500px;
+}
+
+.card {
+  background: white;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-8);
+  box-shadow: var(--shadow-lg);
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.stepContent {
+  margin-top: var(--space-6);
+}
+
+.footer {
+  background: white;
+  border-top: 1px solid var(--color-border);
+  padding: var(--space-6) var(--space-4);
+  text-align: center;
+}
+
+.poweredBy {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  margin: 0;
+}
+
+.poweredBy strong {
+  color: var(--primary, var(--color-primary-600));
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .container {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .card {
+    padding: var(--space-6);
+  }
+
+  .headerContent {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .main {
+    padding: var(--space-6) var(--space-4);
+  }
+}
+
+@media (max-width: 375px) {
+  .card {
+    padding: var(--space-4);
+  }
+
+  .trustBadges {
+    flex-direction: column;
+    align-items: center;
+  }
+}

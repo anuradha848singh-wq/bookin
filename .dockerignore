@@ -1,0 +1,34 @@
+# Exclude dependencies (reinstalled inside Docker)
+node_modules
+**/node_modules
+
+# Exclude Next.js build cache (rebuilt inside Docker)
+.next
+**/.next
+.turbo
+**/.turbo
+
+# Exclude local pnpm store
+.pnpm-store
+
+# Exclude local environments and logs
+.env*.local
+.env.local
+.env.production
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Exclude git and IDE settings
+.git
+.vscode
+.idea
+.gemini
+.antigravityignore
+
+# Exclude documentation
+*.md
+
+# Exclude batch scripts
+*.bat

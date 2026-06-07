@@ -1,0 +1,31 @@
+{
+  "name": "@book-in/booking",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3003",
+    "build": "next build",
+    "start": "next start -p 3003",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@book-in/config": "workspace:*",
+    "@book-in/db": "workspace:*",
+    "@book-in/lib": "workspace:*",
+    "@book-in/ui": "workspace:*",
+    "lucide-react": "^1.17.0",
+    "lz-string": "^1.5.0",
+    "next": "^14.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "stripe": "^22.2.0",
+    "zod": "^3.22.4",
+    "zustand": "^5.0.14"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "typescript": "^5.1.3"
+  }
+}

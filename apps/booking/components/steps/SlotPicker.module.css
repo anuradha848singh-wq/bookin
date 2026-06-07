@@ -1,0 +1,174 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.dateTabs {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  padding-bottom: var(--space-2);
+  scrollbar-width: thin;
+}
+
+.dateTabs::-webkit-scrollbar {
+  height: 4px;
+}
+
+.dateTabs::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+}
+
+.dateTab {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 70px;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  font-family: var(--font-family-base);
+}
+
+.dateTab:hover:not(:disabled) {
+  background: var(--color-background-secondary);
+  border-color: var(--primary, var(--color-primary-300));
+}
+
+.dateTab.active {
+  background: var(--primary, var(--color-primary-600));
+  border-color: var(--primary, var(--color-primary-600));
+  color: white;
+}
+
+.dateTab:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dateTabDay {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-tertiary);
+}
+
+.dateTab.active .dateTabDay {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.dateTabNum {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  margin-top: var(--space-1);
+}
+
+.slotsContainer {
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.slotsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: var(--space-3);
+}
+
+.slotButton {
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.slotButton:hover:not(:disabled) {
+  background: var(--primary, var(--color-primary-600));
+  border-color: var(--primary, var(--color-primary-600));
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.slotButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.slotButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.loadingState,
+.emptyState,
+.errorState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-12);
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+.emptyIcon,
+.errorIcon {
+  font-size: var(--font-size-5xl);
+  margin-bottom: var(--space-4);
+  opacity: 0.3;
+}
+
+.errorMessage {
+  padding: var(--space-4);
+  background: var(--color-error-50);
+  border: 1px solid var(--color-error-200);
+  border-radius: var(--radius-lg);
+  color: var(--color-error-700);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
+.backButton {
+  align-self: flex-start;
+  padding: var(--space-3) 0;
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: color var(--transition-base);
+}
+
+.backButton:hover {
+  color: var(--color-text-primary);
+}
+
+@media (max-width: 768px) {
+  .slotsGrid {
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  }
+}

@@ -1,0 +1,1148 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─────────────────────────────────────────────
+// TENANTS (Businesses/Clinics on the platform)
+// ─────────────────────────────────────────────
+model Tenant {
+  id                  String       @id @default(cuid())
+  slug                String       @unique // Used in URLs & schema name: tenant_{slug}
+  name                String
+  businessType        BusinessType
+  email               String       @unique
+  phone               String?
+  logoUrl             String?
+  coverImageUrl       String?
+  timezone            String       @default("UTC") // IANA timezone string
+  currency            String       @default("USD") // ISO 4217
+  locale              String       @default("en-US")
+  country             String       @default("US") // ISO 3166-1 alpha-2
+  addressLine1        String?
+  addressLine2        String?
+  city                String?
+  state               String?
+  postalCode          String?
+  schemaStatus        SchemaStatus @default(PROVISIONING)
+  status              TenantStatus @default(ACTIVE)
+  planId              String
+  plan                Plan         @relation(fields: [planId], references: [id])
+  stripeCustomerId    String?      @unique
+  stripeAccountId     String?      @unique // Stripe Connect account
+  onboardingStep      Int          @default(0)
+  onboardingCompleted Boolean      @default(false)
+  trialEndsAt         DateTime?
+  deletedAt           DateTime? // Soft delete
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  users           TenantUser[]
+  subscriptions   Subscription[]
+  apiKeys         ApiKey[]
+  builderWebsites BuilderWebsite[]
+
+  @@index([slug])
+  @@index([status])
+  @@index([stripeCustomerId])
+}
+
+enum BusinessType {
+  MEDICAL_CLINIC
+  DENTAL_CLINIC
+  VETERINARY
+  BEAUTY_SALON
+  BARBERSHOP
+  SPA_WELLNESS
+  FITNESS_GYM
+  YOGA_STUDIO
+  PHYSIOTHERAPY
+  PSYCHOLOGY
+  LAW_FIRM
+  TUTORING
+  COACHING
+  OTHER
+}
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+  CANCELLED
+  PAST_DUE
+}
+
+enum SchemaStatus {
+  PROVISIONING // Schema being created
+  READY // Schema created and baseline migrations applied
+  FAILED // Schema creation failed — requires manual intervention
+}
+
+// ─────────────────────────────────────────────
+// GLOBAL USERS (Platform-level identity)
+// ─────────────────────────────────────────────
+model GlobalUser {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  passwordHash    String? // null if OAuth-only
+  emailVerified   Boolean   @default(false)
+  emailVerifiedAt DateTime?
+  avatarUrl       String?
+  fullName        String?
+  isSuperAdmin    Boolean   @default(false)
+  lastLoginAt     DateTime?
+  loginCount      Int       @default(0)
+  deletedAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  tenantUsers   TenantUser[]
+  sessions      GlobalSession[]
+  oauthAccounts OAuthAccount[]
+  refreshTokens RefreshToken[]
+
+  @@index([email])
+}
+
+// ─────────────────────────────────────────────
+// TENANT–USER JOIN (Which user belongs to which tenant)
+// ─────────────────────────────────────────────
+model TenantUser {
+  id           String       @id @default(cuid())
+  tenantId     String
+  tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId       String
+  user         GlobalUser   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role         TenantRole
+  isOwner      Boolean      @default(false)
+  invitedBy    String?
+  inviteToken  String?      @unique
+  inviteStatus InviteStatus @default(PENDING)
+  joinedAt     DateTime?
+  deletedAt    DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@unique([tenantId, userId])
+  @@index([tenantId])
+  @@index([userId])
+}
+
+enum TenantRole {
+  OWNER
+  ADMIN
+  MANAGER
+  STAFF
+  RECEPTIONIST
+  VIEWER
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+// ─────────────────────────────────────────────
+// PLANS & SUBSCRIPTIONS
+// ─────────────────────────────────────────────
+model Plan {
+  id                   String   @id @default(cuid())
+  name                 String   @unique // "Starter", "Growth", "Professional", "Enterprise"
+  slug                 String   @unique
+  stripePriceIdMonthly String?
+  stripePriceIdYearly  String?
+  priceMonthly         Decimal  @db.Decimal(10, 2)
+  priceYearly          Decimal  @db.Decimal(10, 2)
+  maxStaff             Int // -1 = unlimited
+  maxLocations         Int // -1 = unlimited
+  maxBookingsPerMonth  Int // -1 = unlimited
+  maxClients           Int // -1 = unlimited
+  maxStorageGb         Int
+  features             Json // {"ai": true, "whiteLabel": false, "apiAccess": true, ...}
+  isActive             Boolean  @default(true)
+  displayOrder         Int      @default(0)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  tenants       Tenant[]
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  tenantId             String
+  tenant               Tenant             @relation(fields: [tenantId], references: [id])
+  planId               String
+  plan                 Plan               @relation(fields: [planId], references: [id])
+  stripeSubscriptionId String             @unique
+  status               SubscriptionStatus
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean            @default(false)
+  cancelledAt          DateTime?
+  trialStart           DateTime?
+  trialEnd             DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  invoices Invoice[]
+
+  @@index([tenantId])
+  @@index([stripeSubscriptionId])
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  INCOMPLETE
+  INCOMPLETE_EXPIRED
+  PAST_DUE
+  CANCELLED
+  UNPAID
+  PAUSED
+}
+
+model Invoice {
+  id              String        @id @default(cuid())
+  subscriptionId  String
+  subscription    Subscription  @relation(fields: [subscriptionId], references: [id])
+  stripeInvoiceId String        @unique
+  amountDue       Decimal       @db.Decimal(10, 2)
+  amountPaid      Decimal       @db.Decimal(10, 2)
+  currency        String        @default("usd")
+  status          InvoiceStatus
+  invoiceUrl      String?
+  pdfUrl          String?
+  dueDate         DateTime?
+  paidAt          DateTime?
+  createdAt       DateTime      @default(now())
+
+  @@index([subscriptionId])
+}
+
+enum InvoiceStatus {
+  DRAFT
+  OPEN
+  PAID
+  VOID
+  UNCOLLECTIBLE
+}
+
+// ─────────────────────────────────────────────
+// AUTH TABLES
+// ─────────────────────────────────────────────
+model GlobalSession {
+  id         String     @id @default(cuid())
+  userId     String
+  user       GlobalUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenantId   String? // Active tenant context
+  deviceInfo Json? // Browser, OS, device type
+  ipAddress  String?
+  userAgent  String?
+  expiresAt  DateTime
+  lastSeenAt DateTime   @default(now())
+  createdAt  DateTime   @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model RefreshToken {
+  id        String     @id @default(cuid())
+  token     String     @unique
+  userId    String
+  user      GlobalUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceId  String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime   @default(now())
+
+  @@index([token])
+  @@index([userId])
+}
+
+model OAuthAccount {
+  id                String     @id @default(cuid())
+  userId            String
+  user              GlobalUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider          String // "google", "apple", "microsoft"
+  providerAccountId String
+  accessToken       String?    @db.Text
+  refreshToken      String?    @db.Text
+  tokenExpiresAt    DateTime?
+  scope             String?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  @@unique([provider, providerAccountId])
+}
+
+model SsoToken {
+  id           String   @id @default(cuid())
+  token        String   @unique @default(uuid())
+  studioUserId String
+  studioUser   StudioUser @relation(fields: [studioUserId], references: [id], onDelete: Cascade)
+  redirectPath String
+  expiresAt    DateTime
+  used         Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@index([token])
+  @@index([expiresAt])
+}
+
+// ─────────────────────────────────────────────
+// API KEYS
+// ─────────────────────────────────────────────
+model ApiKey {
+  id          String    @id @default(cuid())
+  tenantId    String
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name        String
+  keyHash     String    @unique // sha256 of the actual key
+  keyPrefix   String // First 8 chars, shown in UI
+  permissions Json // ["bookings:read", "bookings:write", "clients:read", ...]
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([tenantId])
+  @@index([keyHash])
+}
+
+// ─────────────────────────────────────────────
+// TENANT SPECIFIC TABLES (Routed via search_path)
+// ─────────────────────────────────────────────
+
+model Client {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  global_user_id     String?   @unique
+  first_name         String
+  last_name          String
+  email              String?
+  phone              String?
+  date_of_birth      DateTime? @db.Date
+  gender             String?
+  avatar_url         String?
+  notes              String?
+  tags               String[]  @default([])
+  custom_fields      Json?     @default("{}")
+  gdpr_consent       Boolean?  @default(false)
+  gdpr_consent_at    DateTime? @db.Timestamptz(6)
+  marketing_opt_in   Boolean?  @default(false)
+  source             String?
+  referrer_client_id String?   @db.Uuid
+  lifetime_value     Decimal?  @default(0) @db.Decimal(12, 2)
+  visit_count        Int?      @default(0)
+  last_visit_at      DateTime? @db.Timestamptz(6)
+  deleted_at         DateTime? @db.Timestamptz(6)
+  created_at         DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime  @default(now()) @db.Timestamptz(6)
+
+  referrer_client  Client?          @relation("ClientReferrer", fields: [referrer_client_id], references: [id])
+  referred_clients Client[]         @relation("ClientReferrer")
+  bookings         Booking[]
+  form_submissions FormSubmission[]
+  client_notes     ClientNote[]
+  activities       ClientActivity[]
+  orders           Order[]
+
+  @@map("clients")
+}
+
+model Location {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  address_line1 String?
+  address_line2 String?
+  city          String?
+  state         String?
+  postal_code   String?
+  country       String?   @default("US")
+  lat           Decimal?  @db.Decimal(9, 6)
+  lng           Decimal?  @db.Decimal(9, 6)
+  phone         String?
+  email         String?
+  timezone      String    @default("UTC")
+  is_primary    Boolean?  @default(false)
+  is_active     Boolean?  @default(true)
+  deleted_at    DateTime? @db.Timestamptz(6)
+  created_at    DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime  @default(now()) @db.Timestamptz(6)
+
+  bookings      Booking[]
+  working_hours StaffWorkingHours[]
+
+  @@map("locations")
+}
+
+model ServiceCategory {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  slug          String   @unique
+  description   String?
+  color         String?
+  icon          String?
+  display_order Int?     @default(0)
+  is_active     Boolean? @default(true)
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime @default(now()) @db.Timestamptz(6)
+
+  services Service[]
+
+  @@map("service_categories")
+}
+
+model Service {
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  category_id           String?   @db.Uuid
+  name                  String
+  slug                  String    @unique
+  description           String?
+  short_description     String?
+  duration_minutes      Int
+  buffer_before_minutes Int?      @default(0)
+  buffer_after_minutes  Int?      @default(0)
+  price                 Decimal?  @db.Decimal(10, 2)
+  pricing_type          String    @default("FIXED")
+  min_price             Decimal?  @db.Decimal(10, 2)
+  max_price             Decimal?  @db.Decimal(10, 2)
+  currency              String?   @default("USD")
+  max_advance_days      Int?      @default(90)
+  min_advance_hours     Int?      @default(1)
+  max_capacity          Int?      @default(1)
+  is_group_session      Boolean?  @default(false)
+  requires_deposit      Boolean?  @default(false)
+  deposit_amount        Decimal?  @db.Decimal(10, 2)
+  deposit_type          String?   @default("FIXED")
+  is_online             Boolean?  @default(false)
+  is_public             Boolean?  @default(true)
+  color                 String?
+  image_url             String?
+  form_id               String?   @db.Uuid
+  deleted_at            DateTime? @db.Timestamptz(6)
+  created_at            DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime  @default(now()) @db.Timestamptz(6)
+
+  category       ServiceCategory? @relation(fields: [category_id], references: [id])
+  addons         ServiceAddon[]
+  staff_services StaffService[]
+  bookings       Booking[]
+
+  @@map("services")
+}
+
+model ServiceAddon {
+  id                     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  service_id             String   @db.Uuid
+  name                   String
+  description            String?
+  price                  Decimal  @default(0) @db.Decimal(10, 2)
+  duration_extra_minutes Int?     @default(0)
+  is_required            Boolean? @default(false)
+  display_order          Int?     @default(0)
+  is_active              Boolean? @default(true)
+  created_at             DateTime @default(now()) @db.Timestamptz(6)
+
+  service        Service        @relation(fields: [service_id], references: [id], onDelete: Cascade)
+  booking_addons BookingAddon[]
+
+  @@map("service_addons")
+}
+
+model Staff {
+  id                     String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  global_user_id         String?   @unique
+  first_name             String
+  last_name              String
+  email                  String?
+  phone                  String?
+  avatar_url             String?
+  title                  String?
+  bio                    String?
+  specializations        String[]  @default([])
+  color                  String?
+  is_accepting_bookings  Boolean?  @default(true)
+  show_on_booking_portal Boolean?  @default(true)
+  display_order          Int?      @default(0)
+  deleted_at             DateTime? @db.Timestamptz(6)
+  created_at             DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime  @default(now()) @db.Timestamptz(6)
+
+  staff_services StaffService[]
+  working_hours  StaffWorkingHours[]
+  date_overrides StaffDateOverride[]
+  bookings       Booking[]
+  client_notes   ClientNote[]
+
+  @@map("staff")
+}
+
+model StaffService {
+  staff_id   String @db.Uuid
+  service_id String @db.Uuid
+
+  staff   Staff   @relation(fields: [staff_id], references: [id], onDelete: Cascade)
+  service Service @relation(fields: [service_id], references: [id], onDelete: Cascade)
+
+  @@id([staff_id, service_id])
+  @@map("staff_services")
+}
+
+model StaffWorkingHours {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  staff_id    String    @db.Uuid
+  location_id String?   @db.Uuid
+  day_of_week Int
+  is_day_off  Boolean?  @default(false)
+  start_time  DateTime? @db.Time
+  end_time    DateTime? @db.Time
+  break_start DateTime? @db.Time
+  break_end   DateTime? @db.Time
+
+  staff    Staff     @relation(fields: [staff_id], references: [id], onDelete: Cascade)
+  location Location? @relation(fields: [location_id], references: [id])
+
+  @@unique([staff_id, location_id, day_of_week])
+  @@map("staff_working_hours")
+}
+
+model StaffDateOverride {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  staff_id   String    @db.Uuid
+  date       DateTime  @db.Date
+  type       String
+  is_day_off Boolean?  @default(true)
+  start_time DateTime? @db.Time
+  end_time   DateTime? @db.Time
+  reason     String?
+
+  staff Staff @relation(fields: [staff_id], references: [id], onDelete: Cascade)
+
+  @@unique([staff_id, date])
+  @@map("staff_date_overrides")
+}
+
+model Booking {
+  id                       String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reference_number         String    @unique
+  client_id                String    @db.Uuid
+  service_id               String    @db.Uuid
+  staff_id                 String?   @db.Uuid
+  location_id              String?   @db.Uuid
+  status                   String    @default("PENDING")
+  starts_at                DateTime  @db.Timestamptz(6)
+  ends_at                  DateTime  @db.Timestamptz(6)
+  duration_minutes         Int
+  buffer_before            Int?      @default(0)
+  buffer_after             Int?      @default(0)
+  price                    Decimal   @default(0) @db.Decimal(10, 2)
+  deposit_paid             Decimal?  @default(0) @db.Decimal(10, 2)
+  discount_amount          Decimal?  @default(0) @db.Decimal(10, 2)
+  discount_code            String?
+  total_paid               Decimal?  @default(0) @db.Decimal(10, 2)
+  currency                 String?   @default("USD")
+  payment_status           String?   @default("UNPAID")
+  stripe_payment_intent_id String?   @unique
+  notes                    String?
+  internal_notes           String?
+  cancel_reason            String?
+  cancelled_by             String?
+  cancelled_at             DateTime? @db.Timestamptz(6)
+  reminder_sent_24h        Boolean?  @default(false)
+  reminder_sent_1h         Boolean?  @default(false)
+  follow_up_sent           Boolean?  @default(false)
+  metadata                 Json?     @default("{}")
+  created_by               String?
+  source                   String?   @default("BOOKING_PORTAL")
+  created_at               DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at               DateTime  @default(now()) @db.Timestamptz(6)
+
+  client   Client    @relation(fields: [client_id], references: [id])
+  service  Service   @relation(fields: [service_id], references: [id])
+  staff    Staff?    @relation(fields: [staff_id], references: [id])
+  location Location? @relation(fields: [location_id], references: [id])
+
+  addons           BookingAddon[]
+  status_history   BookingStatusHistory[]
+  form_submissions FormSubmission[]
+  payments         Payment[]
+  orders           Order[]
+
+  @@map("bookings")
+}
+
+model BookingAddon {
+  id         String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  booking_id String  @db.Uuid
+  addon_id   String  @db.Uuid
+  name       String
+  price      Decimal @db.Decimal(10, 2)
+  quantity   Int?    @default(1)
+
+  booking Booking      @relation(fields: [booking_id], references: [id], onDelete: Cascade)
+  addon   ServiceAddon @relation(fields: [addon_id], references: [id])
+
+  @@map("booking_addons")
+}
+
+model BookingStatusHistory {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  booking_id  String   @db.Uuid
+  from_status String?
+  to_status   String
+  changed_by  String?
+  reason      String?
+  metadata    Json?
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  booking Booking @relation(fields: [booking_id], references: [id], onDelete: Cascade)
+
+  @@map("booking_status_history")
+}
+
+model Form {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  slug        String    @unique
+  description String?
+  type        String
+  schema      Json
+  ui_schema   Json?
+  is_required Boolean?  @default(false)
+  is_active   Boolean?  @default(true)
+  version     Int?      @default(1)
+  deleted_at  DateTime? @db.Timestamptz(6)
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime  @default(now()) @db.Timestamptz(6)
+
+  submissions FormSubmission[]
+
+  @@map("forms")
+}
+
+model FormSubmission {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  form_id      String   @db.Uuid
+  client_id    String?  @db.Uuid
+  booking_id   String?  @db.Uuid
+  responses    Json
+  submitted_at DateTime @default(now()) @db.Timestamptz(6)
+  ip_address   String?
+  created_at   DateTime @default(now()) @db.Timestamptz(6)
+
+  form    Form     @relation(fields: [form_id], references: [id])
+  client  Client?  @relation(fields: [client_id], references: [id])
+  booking Booking? @relation(fields: [booking_id], references: [id])
+
+  @@map("form_submissions")
+}
+
+model Payment {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  booking_id        String?  @db.Uuid
+  stripe_payment_id String?  @unique
+  type              String
+  status            String
+  amount            Decimal  @db.Decimal(10, 2)
+  refunded_amount   Decimal? @default(0) @db.Decimal(10, 2)
+  currency          String?  @default("usd")
+  payment_method    String?
+  failure_reason    String?
+  metadata          Json?    @default("{}")
+  created_at        DateTime @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime @default(now()) @db.Timestamptz(6)
+
+  booking Booking? @relation(fields: [booking_id], references: [id])
+
+  @@map("payments")
+}
+
+model NotificationLog {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id   String?
+  recipient   String
+  channel     String
+  template_id String?
+  status      String
+  error       String?
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("notifications_log")
+}
+
+model ClientNote {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  client_id  String   @db.Uuid
+  staff_id   String?  @db.Uuid
+  content    String
+  is_pinned  Boolean? @default(false)
+  metadata   Json?    @default("{}")
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+
+  client Client @relation(fields: [client_id], references: [id], onDelete: Cascade)
+  staff  Staff? @relation(fields: [staff_id], references: [id], onDelete: SetNull)
+
+  @@map("client_notes")
+}
+
+model ClientActivity {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  client_id   String   @db.Uuid
+  type        String
+  title       String
+  description String?
+  link_id     String?  @db.Uuid
+  metadata    Json?    @default("{}")
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  client Client @relation(fields: [client_id], references: [id], onDelete: Cascade)
+
+  @@map("client_activities")
+}
+
+model ProductCategory {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  slug          String   @unique
+  description   String?
+  display_order Int?     @default(0)
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+
+  products Product[]
+
+  @@map("product_categories")
+}
+
+model Product {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  category_id        String?  @db.Uuid
+  name               String
+  slug               String   @unique
+  description        String?
+  is_digital         Boolean? @default(false)
+  is_track_inventory Boolean? @default(true)
+  status             String   @default("ACTIVE")
+  images             String[] @default([])
+  created_at         DateTime @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime @default(now()) @db.Timestamptz(6)
+
+  category ProductCategory? @relation(fields: [category_id], references: [id])
+  variants ProductVariant[]
+
+  @@map("products")
+}
+
+model ProductVariant {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  product_id    String   @db.Uuid
+  name          String
+  sku           String?  @unique
+  barcode       String?
+  price         Decimal  @default(0) @db.Decimal(10, 2)
+  compare_price Decimal? @db.Decimal(10, 2)
+  cost_price    Decimal? @db.Decimal(10, 2)
+  stock_count   Int      @default(0)
+  weight_grams  Int?     @default(0)
+  is_active     Boolean? @default(true)
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime @default(now()) @db.Timestamptz(6)
+
+  product      Product                @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  transactions InventoryTransaction[]
+  order_items  OrderItem[]
+
+  @@map("product_variants")
+}
+
+model InventoryTransaction {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  variant_id    String   @db.Uuid
+  change_amount Int
+  reason        String
+  reference_id  String?  @db.Uuid
+  created_by    String?
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+
+  variant ProductVariant @relation(fields: [variant_id], references: [id])
+
+  @@map("inventory_transactions")
+}
+
+model Order {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  client_id        String?  @db.Uuid
+  booking_id       String?  @db.Uuid
+  order_number     String   @unique
+  status           String   @default("PENDING")
+  payment_status   String   @default("UNPAID")
+  total_amount     Decimal  @db.Decimal(10, 2)
+  shipping_address Json?
+  notes            String?
+  created_at       DateTime @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime @default(now()) @db.Timestamptz(6)
+
+  client  Client?     @relation(fields: [client_id], references: [id])
+  booking Booking?    @relation(fields: [booking_id], references: [id])
+  items   OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id           String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  order_id     String  @db.Uuid
+  variant_id   String  @db.Uuid
+  product_name String
+  variant_name String
+  price        Decimal @db.Decimal(10, 2)
+  quantity     Int     @default(1)
+  total        Decimal @db.Decimal(10, 2)
+
+  order   Order          @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  variant ProductVariant @relation(fields: [variant_id], references: [id])
+
+  @@map("order_items")
+}
+
+model Automation {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  description   String?
+  trigger_event String
+  conditions    Json?     @default("[]")
+  actions       Json
+  is_active     Boolean?  @default(true)
+  run_count     Int?      @default(0)
+  last_run_at   DateTime? @db.Timestamptz(6)
+  created_at    DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime  @default(now()) @db.Timestamptz(6)
+
+  logs AutomationLog[]
+
+  @@map("automations")
+}
+
+model AutomationLog {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  automation_id    String   @db.Uuid
+  triggering_event Json?
+  status           String
+  error_message    String?
+  executed_actions Json?
+  created_at       DateTime @default(now()) @db.Timestamptz(6)
+
+  automation Automation @relation(fields: [automation_id], references: [id], onDelete: Cascade)
+
+  @@map("automation_logs")
+}
+
+model TenantPaymentConfig {
+  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  stripe_account_id     String?
+  stripe_live_key       String?
+  stripe_test_key       String?
+  stripe_webhook_secret String?
+  is_test_mode          Boolean? @default(true)
+  payment_methods       String[] @default(["card"])
+  deposit_required      Boolean? @default(false)
+  deposit_percent       Int?     @default(20)
+  currency              String   @default("USD")
+  tax_rate              Decimal? @default(0) @db.Decimal(5, 2)
+  invoice_prefix        String?  @default("INV")
+  created_at            DateTime @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("tenant_payment_configs")
+}
+
+model Page {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug       String    @unique
+  title      String?
+  content    Json?
+  is_home    Boolean   @default(false)
+  seo_meta   Json?     @default("{}")
+  published  Boolean?  @default(false)
+  deleted_at DateTime? @db.Timestamptz(6)
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@map("pages")
+}
+
+// ─────────────────────────────────────────────
+// BUILDER MODELS (Website Builder)
+// ─────────────────────────────────────────────
+
+model StudioUser {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  passwordHash    String?   // null if OAuth
+  fullName        String?
+  avatarUrl       String?
+  deletedAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  websites        BuilderWebsite[]
+  ssoTokens       SsoToken[]
+
+  @@index([email])
+}
+
+model BuilderWebsite {
+  id          String    @id @default(cuid())
+  ownerId     String
+  owner       StudioUser @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  bookinTenantId String? // Optional linkage to Bookin SaaS Tenant
+  tenant      Tenant?    @relation(fields: [bookinTenantId], references: [id], onDelete: SetNull)
+
+  name        String
+  slug        String    @unique // E.g., "my-clinic-site"
+  design      Json // Serialized CraftJS state (global layout/header/footer)
+  isPublished Boolean   @default(false)
+  publishedAt DateTime?
+  
+  gaId        String?
+  gtmId       String?
+  fbPixelId   String?
+  customHead  String?
+  customBody  String?
+  customCss   String?
+
+  stripeAccountId String?
+  stripePublicKey String?
+  stripeSecretKey String?
+
+  themeId     String?
+  theme       BuilderTheme?  @relation(fields: [themeId], references: [id])
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  pages       BuilderPage[]
+  media       BuilderMedia[]
+  forms       BuilderForm[]
+  collections BuilderCollection[]
+  products    StoreProduct[]
+  orders      StoreOrder[]
+  members     SiteMember[]
+  versions    WebsiteVersion[]
+
+  @@index([ownerId])
+  @@index([bookinTenantId])
+}
+
+model BuilderPage {
+  id           String   @id @default(cuid())
+  websiteId    String
+  name         String
+  slug         String // E.g., "/", "/about", "/contact"
+  design       Json // Serialized CraftJS state for this specific page
+  isHome       Boolean  @default(false)
+  isMemberOnly Boolean  @default(false)
+  seo          Json? // Meta titles, descriptions, open graph tags
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  website BuilderWebsite @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@unique([websiteId, slug]) // Ensure unique page slugs per website
+  @@index([websiteId])
+}
+
+model WebsiteVersion {
+  id          String   @id @default(cuid())
+  websiteId   String
+  website     BuilderWebsite @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  snapshot    Json // Full serialized design JSON
+  publishedBy String
+  createdAt   DateTime @default(now())
+
+  @@index([websiteId])
+}
+
+model BuilderMedia {
+  id        String   @id @default(cuid())
+  websiteId String
+  url       String
+  filename  String
+  size      Int
+  mimeType  String
+  alt       String?
+  createdAt DateTime @default(now())
+
+  website BuilderWebsite @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@index([websiteId])
+}
+
+model BuilderForm {
+  id        String   @id @default(cuid())
+  websiteId String
+  name      String
+  fields    Json // Form schema
+  createdAt DateTime @default(now())
+
+  website     BuilderWebsite          @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  submissions BuilderFormSubmission[]
+
+  @@index([websiteId])
+}
+
+model BuilderFormSubmission {
+  id        String   @id @default(cuid())
+  formId    String
+  data      Json // The submitted answers
+  createdAt DateTime @default(now())
+
+  form BuilderForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@index([formId])
+}
+
+model BuilderTheme {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  colors    Json     // Primary, secondary, background, text, etc.
+  fonts     Json     // Heading font, body font
+  styles    Json     // Button radius, card shadows, etc.
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  websites  BuilderWebsite[]
+  templates BuilderTemplate[]
+}
+
+model BuilderCategory {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+
+  templates BuilderTemplate[]
+}
+
+model BuilderTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  thumbnail   String?
+  design      Json     // Global layout design
+  pages       Json     // Array of pages: [{ name, slug, isHome, design }]
+  
+  categoryId  String
+  category    BuilderCategory @relation(fields: [categoryId], references: [id])
+  
+  themeId     String?
+  theme       BuilderTheme?   @relation(fields: [themeId], references: [id])
+  
+  isPremium   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model BuilderCollection {
+  id        String   @id @default(cuid())
+  websiteId String
+  name      String   // e.g. "Blog Posts", "Team Members"
+  slug      String   // e.g. "blog-posts"
+  fields    Json     // Array of field definitions: [{ name: "Title", type: "text" }, { name: "Image", type: "image" }]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  website   BuilderWebsite @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  items     BuilderCollectionItem[]
+
+  @@unique([websiteId, slug])
+  @@index([websiteId])
+}
+
+model BuilderCollectionItem {
+  id           String   @id @default(cuid())
+  collectionId String
+  data         Json     // The actual content: { "Title": "Hello World", "Image": "url..." }
+  isPublished  Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  collection   BuilderCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  @@index([collectionId])
+}
+
+model StoreProduct {
+  id          String   @id @default(cuid())
+  websiteId   String
+  name        String
+  description String?
+  price       Float
+  inventory   Int      @default(0)
+  images      Json?    // Array of image URLs
+  stripeId    String?  // Stripe Product ID
+  priceId     String?  // Stripe Price ID
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  website     BuilderWebsite @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  orderItems  StoreOrderItem[]
+
+  @@index([websiteId])
+}
+
+model StoreOrder {
+  id          String   @id @default(cuid())
+  websiteId   String
+  customerEmail String
+  totalAmount Float
+  status      String   @default("pending") // pending, paid, shipped, cancelled
+  stripeSessionId String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  website     BuilderWebsite @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  items       StoreOrderItem[]
+
+  @@index([websiteId])
+}
+
+model StoreOrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Float    // Price at time of purchase
+
+  order     StoreOrder   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   StoreProduct @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model SiteMember {
+  id           String   @id @default(cuid())
+  websiteId    String
+  email        String
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  website      BuilderWebsite @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@unique([websiteId, email])
+  @@index([websiteId])
+}
