@@ -17,7 +17,7 @@ class AsyncQueueStub {
   public async enqueue(taskType: string, payload: any, delayMs: number = 0) {
     const handler = this.handlers.get(taskType);
     if (!handler) {
-      logError(`[Queue] No handler registered for task type: ${taskType}`);
+      logError(`[Queue] No handler registered for task type: ${taskType}`, new Error("No handler registered"));
       return;
     }
 
