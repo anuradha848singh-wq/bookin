@@ -1,4 +1,4 @@
-import { prisma } from "@book-in/db";
+import { getPublicClient } from "@book-in/db";
 import { NextResponse } from "next/server";
 
 export async function requireOwnership(
@@ -8,17 +8,19 @@ export async function requireOwnership(
 ) {
   if (!userId) return false;
 
+  const pc = getPublicClient();
+
   try {
     switch (resourceType) {
       case "BuilderWebsite": {
-        const website = await prisma.builderWebsite.findUnique({
+        const website = await pc.builderWebsite.findUnique({
           where: { id: resourceId },
           select: { ownerId: true },
         });
         return website?.ownerId === userId;
       }
       case "Tenant": {
-        const userAccess = await prisma.tenantUser.findUnique({
+        const userAccess = await pc.tenantUser.findUnique({
           where: {
             tenantId_userId: {
               tenantId: resourceId,
@@ -30,7 +32,7 @@ export async function requireOwnership(
         return userAccess?.isOwner || userAccess?.role === "OWNER" || userAccess?.role === "ADMIN";
       }
       case "StudioForm": {
-        const form = await prisma.builderForm.findUnique({
+        const form = await pc.builderForm.findUnique({
           where: { id: resourceId },
           select: { website: { select: { ownerId: true } } },
         });
