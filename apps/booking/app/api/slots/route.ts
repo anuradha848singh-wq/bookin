@@ -133,8 +133,8 @@ export async function GET(request: NextRequest) {
       if (!workStart || !workEnd) continue;
 
       // Parse work window
-      const [startH, startM] = workStart.split(":").map(Number);
-      const [endH, endM] = workEnd.split(":").map(Number);
+      const [startH = 0, startM = 0] = workStart.split(":").map(Number);
+      const [endH = 0, endM = 0] = workEnd.split(":").map(Number);
       const workStartMinutes = startH * 60 + startM;
       const workEndMinutes = endH * 60 + endM;
 

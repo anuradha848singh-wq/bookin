@@ -47,7 +47,8 @@ export default function TodayPageClient({
   initialBookings,
 }: TodayPageClientProps) {
 
-  const displayName = userEmail ? userEmail.split("@")[0].charAt(0).toUpperCase() + userEmail.split("@")[0].slice(1) : "Doctor";
+  const emailPrefix = userEmail ? userEmail.split("@")[0] : undefined;
+  const displayName = emailPrefix ? emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1) : "Doctor";
   
   // Custom Donut Chart component for "Appointments Status"
   const DonutChart = () => {

@@ -65,14 +65,14 @@ export const MinimalTemplate: React.FC<MinimalTemplateProps> = ({
     currentStep === 5 && bookingId && selectedSlot
       ? {
           id: bookingId,
-          slot_id: selectedSlot.id,
+          slot_id: (selectedSlot as any).id || (selectedSlot as any).virtual_id,
           patient_phone: patientPhone,
           patient_name: patientName,
           status: 'confirmed',
           created_at: new Date().toISOString(),
           slot: selectedSlot,
           service: selectedService || undefined,
-        }
+        } as any
       : null;
 
   return (

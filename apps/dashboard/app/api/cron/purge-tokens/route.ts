@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@book-in/db";
+import { getPublicClient } from "@book-in/db";
 
 export async function GET(request: Request) {
   // Check authorization header for cron secret
@@ -12,6 +12,7 @@ export async function GET(request: Request) {
   }
 
   try {
+    const prisma = getPublicClient();
     const result = await prisma.ssoToken.deleteMany({
       where: {
         expiresAt: {

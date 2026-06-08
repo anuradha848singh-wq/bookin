@@ -82,7 +82,7 @@ export default function CRMSegmentsClient({ clinicName }: { clinicName: string }
     }
   });
 
-  const uniqueTags = Object.keys(tagCounts).sort((a, b) => tagCounts[b] - tagCounts[a]);
+  const uniqueTags = Object.keys(tagCounts).sort((a, b) => (tagCounts[b] || 0) - (tagCounts[a] || 0));
 
   // Toggle selected tag for filtering
   const handleToggleTagFilter = (tag: string) => {

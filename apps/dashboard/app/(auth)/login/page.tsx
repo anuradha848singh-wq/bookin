@@ -88,6 +88,7 @@ export default function LoginPage() {
     if (!sRes.ok) throw new Error(sData.error || "Failed to create default service.");
     
     // 4. Slots are now generated dynamically at query time, no pre-generation needed.
+  };
 
   const handleGuestLogin = async () => {
     setLoading(true);

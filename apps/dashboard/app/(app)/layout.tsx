@@ -21,7 +21,7 @@ export default async function AppLayout({
 
   if (!clinic) redirect("/onboarding");
 
-  const initials = user.email?.[0].toUpperCase() || "A";
+  const initials = user.email?.[0]?.toUpperCase() || "A";
   const emailDisplay = user.email || "";
 
   return (

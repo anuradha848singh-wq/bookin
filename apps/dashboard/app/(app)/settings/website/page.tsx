@@ -221,7 +221,7 @@ export default function WebsiteSettingsPage() {
               >
                 {loading || provisioning ? (
                   <>
-                    <Spinner size="sm" color="#ffffff" />
+                    <Spinner size="sm" color="white" />
                     {provisioning ? "Creating your website..." : "Authenticating..."}
                   </>
                 ) : (

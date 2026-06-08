@@ -1,7 +1,7 @@
 import { PrismaClient, Prisma } from "@prisma/client";
 import { validateEnv } from "@book-in/config";
 import * as crypto from "crypto";
-import { logEvent, logError } from "@book-in/lib";
+
 import * as fs from "fs";
 import * as path from "path";
 import { BASELINE_SQL } from "./baseline-sql";
@@ -126,13 +126,13 @@ export async function registerTenantAndCreateSchema(data: {
   const slug = generateSlug(data.name);
   const tenantSchema = `tenant_${slug}`;
 
-  logEvent("info", "Starting new tenant registration", { slug, email: data.email });
+  console.log("Starting new tenant registration", { slug, email: data.email });
 
   // Ensure pg_trgm extension exists in public schema so all tenants can resolve gin_trgm_ops
   try {
     await pc.$executeRawUnsafe(`CREATE EXTENSION IF NOT EXISTS "pg_trgm" SCHEMA public;`);
   } catch (extError) {
-    logEvent("warn", "Could not ensure pg_trgm extension exists in public schema", { error: extError });
+    console.warn("Could not ensure pg_trgm extension exists in public schema", { error: extError });
   }
 
   try {
@@ -180,7 +180,7 @@ export async function registerTenantAndCreateSchema(data: {
           name: data.name,
           slug,
           email: data.email,
-          phone: data.phone,
+          phone: data.phone || null,
           businessType: data.businessType,
           schemaStatus: "PROVISIONING",
           planId: data.planId,
@@ -237,11 +237,11 @@ export async function registerTenantAndCreateSchema(data: {
       timeout: 30000, // 30s timeout for massive DDL
     });
 
-    logEvent("info", "Tenant schema provisioned successfully", { tenantId: result.id, tenantSchema });
+    console.log("Tenant schema provisioned successfully", { tenantId: result.id, tenantSchema });
     return result;
 
   } catch (error: any) {
-    logError("Failed to register tenant", error);
+    console.error("Failed to register tenant", error);
     throw error;
   }
 }

@@ -496,8 +496,8 @@ export default function AvailabilityPage() {
                 return <div key={`empty-${idx}`} style={{ paddingBottom: "100%", background: "none" }} />;
               }
 
-              const isBlocked = workingDays.blockedDates.includes(cellDateStr);
-              const dayNum = parseInt(cellDateStr.split("-")[2]);
+              const isBlocked = workingDays.blockedDates.includes(cellDateStr as string);
+              const dayNum = parseInt((cellDateStr as string).split("-")[2] || "0", 10);
 
               // Check if bookings exist on this day for warning indicators
               const hasBookings = bookings.some((b: any) => {

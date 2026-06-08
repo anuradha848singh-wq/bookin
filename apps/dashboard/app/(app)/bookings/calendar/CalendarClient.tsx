@@ -45,14 +45,14 @@ export default function CalendarClient({ initialSlots, initialBookings, services
   const visibleBookings = useMemo(() => {
     return initialBookings.filter(b => {
       const d = new Date(b.slot.starts_at);
-      return d >= weekDates[0] && d <= new Date(weekDates[6].getTime() + 86400000);
+      return d >= weekDates[0]! && d <= new Date(weekDates[6]!.getTime() + 86400000);
     });
   }, [initialBookings, weekDates]);
 
   const visibleSlots = useMemo(() => {
     return initialSlots.filter(s => {
       const d = new Date(s.starts_at);
-      return d >= weekDates[0] && d <= new Date(weekDates[6].getTime() + 86400000) && s.status === "available";
+      return d >= weekDates[0]! && d <= new Date(weekDates[6]!.getTime() + 86400000) && s.status === "available";
     });
   }, [initialSlots, weekDates]);
 
@@ -85,7 +85,7 @@ export default function CalendarClient({ initialSlots, initialBookings, services
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
           <h1 style={{ fontSize: "20px", fontWeight: "700", color: "#111827", margin: 0 }}>
-            {weekDates[0].toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+            {weekDates[0]?.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
           </h1>
           
           <div style={{ display: "flex", alignItems: "center", background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "8px", overflow: "hidden" }}>
@@ -122,12 +122,12 @@ export default function CalendarClient({ initialSlots, initialBookings, services
           <div style={{ display: "grid", gridTemplateColumns: "60px repeat(7, 1fr)", borderBottom: "1px solid #f0f0f0", background: "#fdfdfd", position: "sticky", top: 0, zIndex: 10 }}>
             <div style={{ padding: "16px 8px", borderRight: "1px solid #f0f0f0" }} /> {/* Time column header */}
             {weekDates.map((date, i) => {
-              const isToday = date.toDateString() === new Date().toDateString();
+              const isToday = date?.toDateString() === new Date().toDateString();
               return (
                 <div key={i} style={{ padding: "16px 12px", borderRight: "1px solid #f0f0f0", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                  <span style={{ fontSize: "12px", fontWeight: "600", color: isToday ? "#e8334a" : "#6b7280", textTransform: "uppercase" }}>{DAYS[i].slice(0, 3)}</span>
+                  <span style={{ fontSize: "12px", fontWeight: "600", color: isToday ? "#e8334a" : "#6b7280", textTransform: "uppercase" }}>{DAYS[i]?.slice(0, 3)}</span>
                   <span style={{ fontSize: "22px", fontWeight: "700", color: isToday ? "#e8334a" : "#111827", marginTop: "4px", width: "36px", height: "36px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", background: isToday ? "#ffe4e6" : "transparent" }}>
-                    {date.getDate()}
+                    {date?.getDate()}
                   </span>
                 </div>
               );
@@ -157,7 +157,7 @@ export default function CalendarClient({ initialSlots, initialBookings, services
 
             {/* Events Overlay (Absolute Positioning within Columns) */}
             {[0, 1, 2, 3, 4, 5, 6].map(dayIdx => {
-              const currentDayDate = weekDates[dayIdx].toDateString();
+              const currentDayDate = weekDates[dayIdx]?.toDateString();
               
               const daySlots = visibleSlots.filter(s => new Date(s.starts_at).toDateString() === currentDayDate);
               const dayBookings = visibleBookings.filter(b => new Date(b.slot.starts_at).toDateString() === currentDayDate);

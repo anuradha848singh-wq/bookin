@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@book-in/db";
-import { auth } from "@/auth";
+import { getPublicClient } from "@book-in/db";
+import { getDashboardAuth } from "@/lib/auth";
 
 export async function DELETE(request: Request) {
   try {
-    const session = await auth();
+    const session = await getDashboardAuth();
     if (!session || !session.user || !session.user.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -15,6 +15,7 @@ export async function DELETE(request: Request) {
     // We do a soft delete for audit, or a hard delete if legally required.
     // Here we'll anonymize personal info and mark deletedAt.
 
+    const prisma = getPublicClient();
     await prisma.$transaction(async (tx) => {
       await tx.globalUser.update({
         where: { id: userId },

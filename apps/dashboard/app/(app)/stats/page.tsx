@@ -1,8 +1,17 @@
 import React from "react";
 import { getTenantClient } from "@book-in/db";
 import { redirect } from "next/navigation";
-import StatsPageClient from "./StatsPageClient";
+import dynamicImport from "next/dynamic";
 import { getDashboardAuth, getCachedTenant as getCachedClinic } from "@/lib/auth";
+
+const StatsPageClient = dynamicImport(() => import("./StatsPageClient"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex-1 flex items-center justify-center min-h-[400px]">
+      <div className="w-8 h-8 border-4 border-gray-200 border-t-red-600 rounded-full animate-spin" />
+    </div>
+  ),
+});
 
 export const dynamic = "force-dynamic";
 
@@ -69,7 +78,9 @@ export default async function StatsPage() {
     const date = new Date(b.starts_at);
     const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const dayName = days[date.getDay()];
-    weekdayCounts[dayName] = (weekdayCounts[dayName] || 0) + 1;
+    if (dayName) {
+      weekdayCounts[dayName] = (weekdayCounts[dayName] || 0) + 1;
+    }
   });
 
   // Find most popular service
@@ -110,7 +121,7 @@ export default async function StatsPage() {
     const bDate = new Date(b.starts_at);
     if (bDate.getMonth() === now.getMonth() && bDate.getFullYear() === now.getFullYear()) {
       const dayIdx = bDate.getDate() - 1;
-      if (dayIdx >= 0 && dayIdx < dailyCounts.length) {
+      if (dayIdx >= 0 && dayIdx < dailyCounts.length && dailyCounts[dayIdx]) {
         dailyCounts[dayIdx].v += 1;
       }
     }

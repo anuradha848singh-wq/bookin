@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { Role } from "@book-in/lib/src/auth/rbac";
+import { Role } from "@book-in/lib";
 
 export class TeamService {
   constructor(private publicDb: PrismaClient, private tenantId: string) {}
@@ -17,7 +17,7 @@ export class TeamService {
     return users;
   }
 
-  async inviteUser(email: string, role: Role) {
+  async inviteUser(email: string, role: "OWNER" | "ADMIN" | "MANAGER") {
     // Check if user already exists
     let user = await this.publicDb.globalUser.findUnique({ where: { email } });
     
@@ -27,7 +27,7 @@ export class TeamService {
       user = await this.publicDb.globalUser.create({
         data: {
           email,
-          fullName: email.split("@")[0],
+          fullName: email.split("@")[0] ?? null,
         },
       });
     }

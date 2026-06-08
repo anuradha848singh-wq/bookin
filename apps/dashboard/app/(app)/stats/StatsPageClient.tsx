@@ -24,7 +24,7 @@ function ChartTip({ active, payload, label }: ChartTipProps) {
       <div className="text-slate-400 font-medium mb-1">{label}</div>
       <div className="flex items-center gap-2 text-[#0f172a] font-bold">
         <span className="w-2 h-2 rounded-full bg-[#0f172a]" />
-        Bookings: {payload[0].value}
+        Bookings: {payload[0]?.value}
       </div>
     </div>
   );

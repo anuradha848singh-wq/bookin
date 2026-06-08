@@ -4,6 +4,7 @@ import { findClinicBySlug } from "@/lib/clinic";
 import lz from "lz-string";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 /**
  * GET /api/headless?clinic=apex&page=home

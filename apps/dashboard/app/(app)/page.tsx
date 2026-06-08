@@ -92,7 +92,7 @@ export default async function AppPage() {
     const bDate = new Date(b.starts_at);
     if (bDate.getMonth() === now.getMonth() && bDate.getFullYear() === now.getFullYear()) {
       const dayIdx = bDate.getDate() - 1;
-      if (dayIdx >= 0 && dayIdx < dailyCounts.length) {
+      if (dayIdx >= 0 && dayIdx < dailyCounts.length && dailyCounts[dayIdx]) {
         dailyCounts[dayIdx].v += 1;
       }
     }

@@ -79,7 +79,7 @@ export default function BookingsPageClient({ initialBookings, metrics }: Booking
   // Auto-select first booking
   useEffect(() => {
     if (initialBookings.length > 0 && !selectedBooking) {
-      setSelectedBooking(initialBookings[0]);
+      setSelectedBooking(initialBookings[0] || null);
     }
   }, [initialBookings]);
 

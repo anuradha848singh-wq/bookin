@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import { getDashboardAuth, getCachedTenant } from "./auth";
 import { getPublicClient, getTenantClient } from "@book-in/db";
 import { PrismaClient, Tenant } from "@prisma/client";
-import { can, Action } from "@book-in/lib/src/auth/rbac";
-import { rateLimit } from "@book-in/lib/src/security/rate-limit";
+import { can, Action, rateLimit } from "@book-in/lib";
 
 export interface TenantRouteContext {
   user: { id: string; email?: string | null; name?: string | null; role: string };
@@ -14,7 +13,7 @@ export interface TenantRouteContext {
 
 export function withTenantAuth(
   handler: (request: Request, ctx: TenantRouteContext, params?: any) => Promise<NextResponse>,
-  requiredAction?: Action // Strict RBAC checking
+  requiredActionOrRoles?: Action | string[] // Strict RBAC checking or Role checking
 ) {
   return async (request: Request, context: { params?: any } = {}) => {
     try {
@@ -40,9 +39,17 @@ export function withTenantAuth(
 
       const tenantUserRole = tenantWithUsers.users[0].role;
       
-      // RBAC Check via action capability
-      if (requiredAction && !can(tenantUserRole, requiredAction)) {
-        return NextResponse.json({ success: false, error: "Forbidden: insufficient permissions" }, { status: 403 });
+      // RBAC Check via action capability or role array
+      if (requiredActionOrRoles) {
+        if (Array.isArray(requiredActionOrRoles)) {
+          if (!requiredActionOrRoles.includes(tenantUserRole)) {
+            return NextResponse.json({ success: false, error: "Forbidden: insufficient permissions" }, { status: 403 });
+          }
+        } else {
+          if (!can(tenantUserRole, requiredActionOrRoles)) {
+            return NextResponse.json({ success: false, error: "Forbidden: insufficient permissions" }, { status: 403 });
+          }
+        }
       }
 
       // Strip users from tenant object for clean context

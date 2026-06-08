@@ -11,8 +11,12 @@ export const GET = withTenantAuth(async (request, { tenantDb }) => {
   const status = url.searchParams.get("status") || undefined;
   const staffId = url.searchParams.get("staff_id") || undefined;
   
+  const options: any = { page, limit };
+  if (status) options.status = status;
+  if (staffId) options.staffId = staffId;
+  
   const bookingService = new BookingService(tenantDb);
-  const result = await bookingService.getBookings({ page, limit, status, staffId });
+  const result = await bookingService.getBookings(options);
 
   return NextResponse.json({ success: true, ...result });
 }, "view");

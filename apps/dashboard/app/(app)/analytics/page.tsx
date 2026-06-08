@@ -141,9 +141,9 @@ function TrendBadge({ value }: { value: number }) {
 function KPICard({
   title, value, subtitle, trend, icon: Icon, color, prefix, suffix, sparkData, sparkKey
 }: {
-  title: string; value: string | number; subtitle?: string; trend?: number;
-  icon: any; color: string; prefix?: string; suffix?: string;
-  sparkData?: any[]; sparkKey?: string;
+  title: string; value: string | number; subtitle?: string | undefined; trend?: number | undefined;
+  icon: any; color: string; prefix?: string | undefined; suffix?: string | undefined;
+  sparkData?: any[] | undefined; sparkKey?: string | undefined;
 }) {
   return (
     <div style={{
@@ -509,8 +509,8 @@ export default function AnalyticsPage() {
                 </thead>
                 <tbody>
                   {tables?.recentBookings.length ? tables.recentBookings.map((b: any) => {
-                    const sc = STATUS_COLORS[b.status] || STATUS_COLORS.PENDING;
-                    const pc = PAYMENT_COLORS[b.paymentStatus] || PAYMENT_COLORS.UNPAID;
+                    const sc = STATUS_COLORS[b.status] || { bg: "#fef3c7", text: "#92400e", border: "#fcd34d" };
+                    const pc = PAYMENT_COLORS[b.paymentStatus] || { bg: "#fef3c7", text: "#92400e" };
                     return (
                       <tr key={b.id} style={{ borderBottom: "1px solid #f3f4f6", transition: "background 0.15s" }}>
                         <td style={{ padding: "12px 16px", fontWeight: 700, color: "#3b82f6", fontFamily: "monospace", fontSize: "12px", whiteSpace: "nowrap" }}>

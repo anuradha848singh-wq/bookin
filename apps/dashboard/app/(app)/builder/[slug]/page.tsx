@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Save, ArrowLeft, ExternalLink, Settings2, Globe, LayoutTemplate } from "lucide-react";
 import Link from "next/link";
-import { logError } from "@book-in/lib";
+import { logError } from "@book-in/lib/logger";
 
 interface PageMeta {
   id: string;

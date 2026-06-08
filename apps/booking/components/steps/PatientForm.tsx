@@ -67,10 +67,10 @@ export const PatientForm: React.FC<PatientFormProps> = ({
           onChange={(e) => {
             setName(e.target.value);
             if (validationErrors.name) {
-              setValidationErrors((prev) => ({ ...prev, name: undefined }));
+              setValidationErrors(({ name, ...prev }) => prev);
             }
           }}
-          error={validationErrors.name}
+          error={validationErrors.name || ""}
           placeholder="e.g. John Doe"
           required
           disabled={isLoading}
@@ -84,10 +84,10 @@ export const PatientForm: React.FC<PatientFormProps> = ({
           onChange={(e) => {
             setPhone(e.target.value);
             if (validationErrors.phone) {
-              setValidationErrors((prev) => ({ ...prev, phone: undefined }));
+              setValidationErrors(({ phone, ...prev }) => prev);
             }
           }}
-          error={validationErrors.phone}
+          error={validationErrors.phone || ""}
           placeholder="e.g. +919876543210"
           required
           disabled={isLoading}

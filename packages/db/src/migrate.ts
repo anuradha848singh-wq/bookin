@@ -30,7 +30,7 @@ async function runMigrations() {
       const sql = fs.readFileSync(filePath, "utf-8");
 
       // Strip rollback comments and run only the "Up" section
-      const upSection = sql.split("-- rollback:")[0];
+      const upSection = sql.split("-- rollback:")[0] || "";
 
       console.log(`⚡ Applying: ${file}`);
 

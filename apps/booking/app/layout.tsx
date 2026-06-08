@@ -11,7 +11,11 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   title: 'BookIn — Book Your Appointment',
   description: 'Quick and easy appointment booking for clinics and services',
-  viewport: 'width=device-width, initial-scale=1',
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({

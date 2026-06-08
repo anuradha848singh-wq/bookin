@@ -67,7 +67,7 @@ export function useBookingFlow({ clinicSlug }: UseBookingFlowProps): UseBookingF
     const handleBeforeUnload = () => {
       if (selectedSlot) {
         const payload = JSON.stringify({
-          slotId: selectedSlot.id,
+          slotId: selectedSlot.virtual_id || encodeURIComponent([selectedSlot.starts_at, selectedSlot.ends_at, selectedSlot.staff_id || 'no-staff', selectedSlot.service_id].join('|')),
           sessionId: sessionIdRef.current,
         });
         navigator.sendBeacon(

@@ -4,11 +4,9 @@ const nextConfig = {
   transpilePackages: ['@book-in/ui', '@book-in/config', '@book-in/lib', '@book-in/db'],
   experimental: {
     optimizePackageImports: ['lucide-react', 'date-fns', 'recharts', 'framer-motion', '@supabase/supabase-js'],
-    // @supabase/supabase-js optionally imports @opentelemetry/api for tracing.
-    // It's not installed — stub it out so Turbopack doesn't fail.
     turbo: {
       resolveAlias: {
-        '@opentelemetry/api': './empty-module.js',
+        '@opentelemetry/api': './empty-otel.js',
       },
     },
   },
@@ -27,15 +25,25 @@ const nextConfig = {
       };
     }
 
-    // Prevent optional/Node-only packages from being bundled in client/edge builds
+    // Only alias optional packages for the client and edge bundles.
+    // The server bundle must be left alone so the bundled fallback stubs work.
+    if (!isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        '@opentelemetry/api': false,
+        'ioredis': false,
+      };
+    }
+
+    // Always stub Node-only built-ins for edge/client
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@opentelemetry/api': false,
-      'ioredis': false,
-      'dns': false,
-      'net': false,
-      'tls': false,
-      'fs': false,
+      ...(isServer ? {} : {
+        'dns': false,
+        'net': false,
+        'tls': false,
+        'fs': false,
+      }),
     };
 
     return config;

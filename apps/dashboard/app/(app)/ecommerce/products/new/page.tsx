@@ -170,7 +170,7 @@ export default function NewProductPage() {
                           value={v.name}
                           onChange={e => {
                             const newV = [...variants];
-                            newV[idx].name = e.target.value;
+                            if (newV[idx]) newV[idx].name = e.target.value;
                             setVariants(newV);
                           }}
                           className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border" 
@@ -184,7 +184,7 @@ export default function NewProductPage() {
                           value={v.price}
                           onChange={e => {
                             const newV = [...variants];
-                            newV[idx].price = e.target.value;
+                            if (newV[idx]) newV[idx].price = e.target.value;
                             setVariants(newV);
                           }}
                           className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border" 
@@ -197,7 +197,7 @@ export default function NewProductPage() {
                           value={v.sku}
                           onChange={e => {
                             const newV = [...variants];
-                            newV[idx].sku = e.target.value;
+                            if (newV[idx]) newV[idx].sku = e.target.value;
                             setVariants(newV);
                           }}
                           className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border" 
@@ -211,7 +211,7 @@ export default function NewProductPage() {
                           value={v.stock_count}
                           onChange={e => {
                             const newV = [...variants];
-                            newV[idx].stock_count = e.target.value;
+                            if (newV[idx]) newV[idx].stock_count = e.target.value;
                             setVariants(newV);
                           }}
                           className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border bg-amber-50" 

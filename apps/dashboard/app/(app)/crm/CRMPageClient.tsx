@@ -250,7 +250,7 @@ export default function CRMPageClient({ clinicName }: { clinicName: string }) {
               {filteredPatients.map((p) => {
                 const completedBookings = p.bookings?.filter(b => b.status === "completed" || b.status === "confirmed") || [];
                 const lastVisit = completedBookings.length > 0 
-                  ? new Date(completedBookings[0].slot.starts_at).toLocaleDateString()
+                  ? new Date(completedBookings[0]!.slot.starts_at).toLocaleDateString()
                   : "No visits";
 
                 return (

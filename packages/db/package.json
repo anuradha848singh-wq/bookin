@@ -12,8 +12,7 @@
   },
   "dependencies": {
     "@prisma/client": "^5.12.1",
-    "@book-in/config": "workspace:*",
-    "@book-in/lib": "workspace:*"
+    "@book-in/config": "workspace:*"
   },
   "devDependencies": {
     "prisma": "^5.12.1",

@@ -24,7 +24,7 @@ export function useSlots({ clinicSlug, serviceId, date }: UseSlotsProps) {
     setError(null);
 
     try {
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = date.toISOString().split('T')[0] || '';
       const res = await fetch(
         `/api/clinic/${clinicSlug}/slots?serviceId=${serviceId}&date=${dateStr}`
       );

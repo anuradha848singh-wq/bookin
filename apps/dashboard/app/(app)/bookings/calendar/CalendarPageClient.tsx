@@ -74,7 +74,7 @@ export default function CalendarClient({ initialBookings, services, staff = [], 
   // Auto-select first booking
   React.useEffect(() => {
     if (initialBookings.length > 0 && !selectedBooking) {
-      setSelectedBooking(initialBookings[0]);
+      setSelectedBooking(initialBookings[0] || null);
     }
   }, [initialBookings]);
 

@@ -77,7 +77,7 @@ export default function FormBuilderClient({ formId, clinicName }: { formId: stri
       type,
       label: `New ${type} field`,
       required: false,
-      options: type === "select" ? ["Option 1", "Option 2"] : undefined
+      ...(type === "select" ? { options: ["Option 1", "Option 2"] } : {})
     };
     setForm({ ...form, fields: [...form.fields, newField] });
     setSelectedFieldId(newField.id);
@@ -102,9 +102,12 @@ export default function FormBuilderClient({ formId, clinicName }: { formId: stri
     const newFields = [...form.fields];
     if (index + direction >= 0 && index + direction < newFields.length) {
       const temp = newFields[index];
-      newFields[index] = newFields[index + direction];
-      newFields[index + direction] = temp;
-      setForm({ ...form, fields: newFields });
+      const target = newFields[index + direction];
+      if (temp && target) {
+        newFields[index] = target;
+        newFields[index + direction] = temp;
+        setForm({ ...form, fields: newFields });
+      }
     }
   };
 

@@ -68,7 +68,7 @@ export async function POST(
     }
 
     // 4. Invalidate the slots availability cache
-    await invalidateSlotsCache(slug, serviceId);
+    await invalidateSlotsCache(slug, serviceId || '');
 
     return NextResponse.json({
       success: true,
@@ -108,7 +108,7 @@ export async function DELETE(
     await releaseSlotLock(lockId, sessionId);
 
     // 2. Invalidate the slots availability cache
-    await invalidateSlotsCache(slug, serviceId);
+    await invalidateSlotsCache(slug, serviceId || '');
 
     return NextResponse.json({
       success: true,

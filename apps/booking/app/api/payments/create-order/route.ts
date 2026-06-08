@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     const stripeKey = config.is_test_mode ? config.stripe_test_key : config.stripe_live_key;
     if (!stripeKey) return NextResponse.json({ success: false, error: "Stripe key missing" }, { status: 400 });
     
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-02-24.acacia" });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-02-24.acacia" as any });
 
     // Fetch Booking
     const bookings = await tenantDb.$queryRaw`SELECT * FROM bookings WHERE id = ${booking_id}::uuid LIMIT 1;` as any[];

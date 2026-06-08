@@ -29,8 +29,8 @@ export const BookingConfirmed: React.FC<BookingConfirmedProps> = ({
     };
   };
 
-  const { date, time } = booking.slot
-    ? formatDateTime(booking.slot.starts_at)
+  const { date, time } = (booking as any).slot
+    ? formatDateTime((booking as any).slot.starts_at)
     : { date: 'N/A', time: 'N/A' };
 
   const handleWhatsApp = () => {

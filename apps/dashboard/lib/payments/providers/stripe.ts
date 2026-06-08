@@ -23,11 +23,11 @@ export class StripeGateway implements IPaymentGateway {
     const session = await this.stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
-      customer_email: params.customerEmail,
+      ...(params.customerEmail !== undefined && { customer_email: params.customerEmail }),
       client_reference_id: params.bookingId,
       metadata: {
         bookingId: params.bookingId,
-        ...params.metadata,
+        ...(params.metadata !== undefined && params.metadata),
       },
       line_items: [
         {
@@ -68,7 +68,7 @@ export class StripeGateway implements IPaymentGateway {
     try {
       const refund = await this.stripe.refunds.create({
         payment_intent: transactionId,
-        amount: amount ? Math.round(amount * 100) : undefined,
+        ...(amount !== undefined && { amount: Math.round(amount * 100) }),
       });
 
       return { success: true, refundId: refund.id };

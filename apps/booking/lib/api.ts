@@ -25,7 +25,7 @@ class ExpectedApiError extends Error {
   status: number;
   code: string;
   details?: unknown;
-  headers?: HeadersInit;
+  headers?: HeadersInit | undefined;
 
   constructor(code: string, message: string, status: number, details?: unknown, headers?: HeadersInit) {
     super(message);
@@ -75,9 +75,11 @@ export const sanitizedString = (min = 1, max = 500) =>
   z.string().transform(sanitizeString).pipe(z.string().min(min).max(max));
 
 export function apiError(code: string, message: string, status: number, details?: unknown, headers?: HeadersInit) {
+  const init: ResponseInit = { status };
+  if (headers) init.headers = headers;
   return NextResponse.json<ApiErrorBody>(
     { success: false, error: { code, message, details } },
-    { status, headers }
+    init
   );
 }
 

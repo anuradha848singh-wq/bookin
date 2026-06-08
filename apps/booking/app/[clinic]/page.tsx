@@ -19,20 +19,20 @@ export const revalidate = 3600;
 function getClinicSlug(host: string | null): string | null {
   if (!host) return null;
   
-  const hostWithoutPort = host.split(':')[0];
+  const hostWithoutPort = host.split(':')[0] || '';
   const parts = hostWithoutPort.split('.');
   
   // Handle localhost: clinic.localhost
   if (hostWithoutPort.endsWith('localhost') || hostWithoutPort.endsWith('127.0.0.1')) {
     if (parts.length > 1) {
-      return parts[0];
+      return parts[0] || null;
     }
     return null;
   }
   
   // Handle production: clinic.bookin.com
   if (parts.length > 2) {
-    return parts[0];
+    return parts[0] || null;
   }
   
   return null;
@@ -99,11 +99,11 @@ async function getClinicData(slug: string) {
 export default async function ClinicBookingPage({
   params,
 }: {
-  params: { clinic: string };
+  params: Promise<{ clinic: string }>;
 }) {
   // In Next.js 13+ with subdomain routing, we need to get the host from headers
   // For now, use the params as fallback
-  const clinicSlug = params.clinic;
+  const clinicSlug = (await params).clinic;
 
   const data = await getClinicData(clinicSlug);
 
@@ -200,9 +200,9 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: {
-  params: { clinic: string };
+  params: Promise<{ clinic: string }>;
 }) {
-  const data = await getClinicData(params.clinic);
+  const data = await getClinicData((await params).clinic);
 
   if (!data) {
     return {

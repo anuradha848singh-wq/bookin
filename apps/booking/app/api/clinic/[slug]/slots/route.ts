@@ -8,7 +8,7 @@ export async function GET(
   { params }: { params: { slug: string } }
 ) {
   try {
-    const ip = request.ip || request.headers.get('x-forwarded-for')?.split(',')[0].trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = request.ip || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
     
     // Apply IP rate limit check (60 req/min)
     const rateLimit = await checkIpRateLimit(ip, 'slots_get', 60, 60);
@@ -92,7 +92,7 @@ export async function GET(
     const slotsByDate: Record<string, any[]> = {};
     
     slots.forEach((slot: any) => {
-      const dateKey = new Date(slot.starts_at).toISOString().split('T')[0];
+      const dateKey = new Date(slot.starts_at).toISOString().split('T')[0] || '';
       if (!slotsByDate[dateKey]) {
         slotsByDate[dateKey] = [];
       }

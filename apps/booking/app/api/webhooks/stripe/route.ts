@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
 
     if (!stripeKey || !webhookSecret) return NextResponse.json({ error: "Stripe not fully configured" }, { status: 400 });
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-02-24.acacia" });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-02-24.acacia" as any });
     let event: Stripe.Event;
 
     try {

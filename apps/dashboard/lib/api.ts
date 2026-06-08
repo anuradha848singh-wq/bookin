@@ -52,8 +52,8 @@ class ExpectedApiError extends Error {
     this.name = "ExpectedApiError";
     this.code = code;
     this.status = status;
-    this.details = details;
-    this.headers = headers;
+    if (details !== undefined) this.details = details;
+    if (headers !== undefined) this.headers = headers;
   }
 }
 
@@ -111,7 +111,7 @@ export const optionalSanitizedString = (max = 500) =>
 export function apiError(code: string, message: string, status: number, details?: unknown, headers?: HeadersInit) {
   return NextResponse.json<ApiErrorBody>(
     { success: false, error: { code, message, details } },
-    { status, headers }
+    { status, ...(headers !== undefined && { headers }) }
   );
 }
 

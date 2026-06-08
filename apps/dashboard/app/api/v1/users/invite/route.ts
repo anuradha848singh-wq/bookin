@@ -5,7 +5,7 @@ import { z } from "zod";
 
 const inviteSchema = z.object({
   email: z.string().email(),
-  role: z.enum(["ADMIN", "EDITOR", "VIEWER"]),
+  role: z.enum(["OWNER", "ADMIN", "MANAGER"]),
 });
 
 export const POST = withTenantAuth(async (request, { tenant, publicDb }) => {

@@ -28,4 +28,4 @@ export const POST = withTenantAuth(async (request, { tenantDb }) => {
     console.error("[POST_AUTOMATION_ERROR]", error);
     return NextResponse.json({ success: false, error: "Failed to create automation" }, { status: 500 });
   }
-}, ["OWNER", "ADMIN"]);
+}, "manage_settings");
