@@ -31,6 +31,7 @@
     "node": ">=18.0.0",
     "pnpm": ">=8.0.0"
   },
+  "packageManager": "pnpm@10.32.1",
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
     "bcryptjs": "^3.0.3",
