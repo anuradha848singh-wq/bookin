@@ -1,5 +1,4 @@
 import { getPublicClient, getTenantClient } from "./index";
-import { parseTimeToMinutes } from "@book-in/lib";
 import { Prisma } from "@prisma/client";
 
 // Helper to convert JavaScript getDay() (0=Sun, 6=Sat) to ISO weekday (1=Mon, 7=Sun)
