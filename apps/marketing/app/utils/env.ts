@@ -5,4 +5,4 @@ export {
   getBuilderUrl, 
   getLoginUrl, 
   getUrlForApp 
-} from "@book-in/lib";
+} from "@book-in/lib/env";
