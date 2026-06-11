@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useEditor } from "@craftjs/core";
-import { Layers, Cuboid, Database, CloudOff, Cloud, SearchPlus, SearchMinus, Grid, MousePointer2 } from "lucide-react";
+import { Layers, Cuboid, Database, CloudOff, Cloud, ZoomIn, ZoomOut, Grid, MousePointer2 } from "lucide-react";
 
 export const BottomToolbar = ({ saveStatus }: { saveStatus: "saved" | "saving" | "unsaved" | "error" }) => {
   const { nodes } = useEditor((state) => ({
@@ -42,9 +42,9 @@ export const BottomToolbar = ({ saveStatus }: { saveStatus: "saved" | "saving" |
         </div>
 
         <div className="builder-zoom-controls">
-          <button className="builder-zoom-btn"><SearchMinus size={12} /></button>
+          <button className="builder-zoom-btn"><ZoomOut size={12} /></button>
           <div className="builder-zoom-value">100%</div>
-          <button className="builder-zoom-btn"><SearchPlus size={12} /></button>
+          <button className="builder-zoom-btn"><ZoomIn size={12} /></button>
         </div>
 
         <button className="builder-bottom-item hover:text-white ml-2 bg-transparent border-none cursor-pointer">
