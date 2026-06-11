@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
-import { useNode } from "@craftjs/core";
+import React, { useEffect, useRef, useState } from "react";
+import { useNode, useEditor } from "@craftjs/core";
 
 interface ButtonProps {
   text?: string;
@@ -14,8 +14,7 @@ interface ButtonProps {
 }
 
 export const ButtonSettings = () => {
-  const { actions: { setProp }, text, background, color, borderRadius, fontSize, paddingX, paddingY } = useNode((node) => ({
-    text: node.data.props.text,
+  const { actions: { setProp }, background, color, borderRadius, fontSize, paddingX, paddingY } = useNode((node) => ({
     background: node.data.props.background,
     color: node.data.props.color,
     borderRadius: node.data.props.borderRadius,
@@ -26,17 +25,6 @@ export const ButtonSettings = () => {
 
   return (
     <div className="flex flex-col gap-5 text-slate-200">
-      {/* Button Label Input */}
-      <div className="flex flex-col gap-2">
-        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Label</label>
-        <input 
-          type="text" 
-          value={text} 
-          onChange={(e) => setProp((p: ButtonProps) => { p.text = e.target.value; })} 
-          className="w-full bg-slate-950 border border-slate-800 focus:border-blue-500 rounded-lg text-slate-200 text-[11px] py-2 px-3 focus:outline-none transition-all font-semibold" 
-        />
-      </div>
-
       {/* Appearance (Colors) */}
       <div className="flex flex-col gap-2">
         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Appearance</label>
@@ -111,17 +99,58 @@ export const ButtonSettings = () => {
 };
 
 export const Button = ({ text = "Click Me", background = "#000000", color = "#ffffff", borderRadius = 4, fontSize = 14, paddingX = 16, paddingY = 8 }: ButtonProps) => {
-  const { connectors: { connect, drag }, isSelected } = useNode((state) => ({
+  const { connectors: { connect, drag }, isSelected, actions: { setProp } } = useNode((state) => ({
     isSelected: state.events.selected,
   }));
+  const { enabled } = useEditor((state) => ({ enabled: state.options.enabled }));
+  
+  const [editable, setEditable] = useState(false);
+  const textRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isSelected) {
+      setEditable(false);
+    }
+  }, [isSelected]);
 
   return (
-    <button
+    <div
       ref={(ref) => { connect(drag(ref as HTMLElement)); }}
-      style={{ background, color, borderRadius: `${borderRadius}px`, fontSize: `${fontSize}px`, padding: `${paddingY}px ${paddingX}px`, border: "none", cursor: "pointer", fontWeight: 500, display: "inline-block", outline: isSelected ? "2px solid #0066FF" : "none", outlineOffset: "1px", transition: "all 0.15s" }}
+      onClick={() => { if (isSelected) setEditable(true); }}
+      style={{ 
+        background, 
+        color, 
+        borderRadius: `${borderRadius}px`, 
+        fontSize: `${fontSize}px`, 
+        padding: `${paddingY}px ${paddingX}px`, 
+        cursor: editable ? "text" : "pointer", 
+        fontWeight: 500, 
+        display: "inline-block", 
+        outline: isSelected ? "2px solid #0066FF" : "none", 
+        outlineOffset: "1px", 
+        transition: editable ? "none" : "all 0.15s" 
+      }}
     >
-      {text}
-    </button>
+      <div
+        ref={textRef}
+        contentEditable={enabled && editable}
+        suppressContentEditableWarning={true}
+        onBlur={(e) => {
+          setEditable(false);
+          const currentText = e.currentTarget.innerText;
+          setProp((p: ButtonProps) => { p.text = currentText; }, 500);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            e.currentTarget.blur();
+          }
+        }}
+        style={{ outline: "none", minWidth: "10px", display: "inline-block" }}
+      >
+        {text}
+      </div>
+    </div>
   );
 };
 

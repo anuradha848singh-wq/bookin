@@ -170,15 +170,40 @@ export const Image = ({
   lazyLoad = true,
   optimizeFormat = true
 }: ImageProps) => {
-  const { connectors: { connect, drag }, isSelected } = useNode((state) => ({
+  const { connectors: { connect, drag }, isSelected, actions: { setProp } } = useNode((state) => ({
     isSelected: state.events.selected,
   }));
 
   const hasImage = !!src;
+  const domRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (!domRef.current || !isSelected) return;
+
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.contentBoxSize) {
+          // If resizing is happening via CSS resize handle, update the props
+          // We debounce or update only on mouseup if possible, but ResizeObserver runs smoothly
+          setProp((p: ImageProps) => {
+            // Only update if it actually changed to prevent loop
+            p.width = `${entry.borderBoxSize[0].inlineSize}px`;
+            p.height = `${entry.borderBoxSize[0].blockSize}px`;
+          }, 500); // 500ms debounce
+        }
+      }
+    });
+
+    observer.observe(domRef.current);
+    return () => observer.disconnect();
+  }, [isSelected, setProp]);
 
   return (
     <div
-      ref={(ref) => { connect(drag(ref as HTMLElement)); }}
+      ref={(ref) => { 
+        if (ref) domRef.current = ref;
+        connect(drag(ref as HTMLElement)); 
+      }}
       style={{ 
         padding: `${padding}px`, 
         width,
@@ -189,8 +214,16 @@ export const Image = ({
         display: "inline-flex",
         justifyContent: "center",
         alignItems: "center",
+        resize: isSelected ? "both" : "none",
+        overflow: isSelected ? "hidden" : "visible",
+        position: "relative",
       }}
     >
+      {isSelected && (
+        <div className="absolute bottom-0 right-0 w-4 h-4 bg-blue-500 rounded-tl-lg pointer-events-none z-10 flex items-center justify-center">
+           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="21 15 21 21 15 21" /><line x1="21" y1="21" x2="15" y2="15" /></svg>
+        </div>
+      )}
       {hasImage ? (
         <img 
           src={optimizeFormat && src && !src.includes('format=webp') ? `${src}${src.includes('?') ? '&' : '?'}format=webp` : src} 

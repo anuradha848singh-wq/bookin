@@ -1,51 +1,21 @@
 "use client";
 
 import React from "react";
-import { useNode } from "@craftjs/core";
+import { useNode, Element } from "@craftjs/core";
+import { Text } from "./Text";
+import { Button } from "./Button";
 
 interface HeroSectionProps {
   background?: string;
   paddingY?: number;
-  clinicName?: string;
-  badgeText?: string;
-  titlePrimary?: string;
-  titleSecondary?: string;
-  description?: string;
-  primaryButtonText?: string;
-  secondaryButtonText?: string;
   imageSrc?: string;
-  reviewRatingText?: string;
-  reviewCountText?: string;
 }
 
 export const HeroSectionSettings = () => {
-  const { 
-    actions: { setProp }, 
-    background, 
-    paddingY,
-    clinicName,
-    badgeText,
-    titlePrimary,
-    titleSecondary,
-    description,
-    primaryButtonText,
-    secondaryButtonText,
-    imageSrc,
-    reviewRatingText,
-    reviewCountText
-  } = useNode((node) => ({
+  const { actions: { setProp }, background, paddingY, imageSrc } = useNode((node) => ({
     background: node.data.props.background,
     paddingY: node.data.props.paddingY,
-    clinicName: node.data.props.clinicName,
-    badgeText: node.data.props.badgeText,
-    titlePrimary: node.data.props.titlePrimary,
-    titleSecondary: node.data.props.titleSecondary,
-    description: node.data.props.description,
-    primaryButtonText: node.data.props.primaryButtonText,
-    secondaryButtonText: node.data.props.secondaryButtonText,
     imageSrc: node.data.props.imageSrc,
-    reviewRatingText: node.data.props.reviewRatingText,
-    reviewCountText: node.data.props.reviewCountText,
   }));
 
   const inputClass = "w-full text-xs bg-white border border-gray-200 rounded px-2.5 py-1.5 focus:outline-none focus:border-blue-500 text-gray-800 font-medium";
@@ -84,67 +54,9 @@ export const HeroSectionSettings = () => {
         </div>
       </div>
 
-      {/* Hero Content */}
-      <div className="flex flex-col gap-3 border-b border-gray-100 pb-4">
-        <h4 className="text-xs font-bold text-gray-700">Clinic Branding</h4>
-        <div className="flex flex-col gap-2">
-          <label className={labelClass}>Clinic Name</label>
-          <input 
-            type="text" 
-            value={clinicName || ""} 
-            onChange={(e) => setProp((p: HeroSectionProps) => { p.clinicName = e.target.value; })} 
-            className={inputClass}
-            placeholder="e.g. Platinum Med"
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className={labelClass}>Badge Subtitle</label>
-          <input 
-            type="text" 
-            value={badgeText || ""} 
-            onChange={(e) => setProp((p: HeroSectionProps) => { p.badgeText = e.target.value; })} 
-            className={inputClass}
-            placeholder="e.g. Care that helps you heal"
-          />
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-3 border-b border-gray-100 pb-4">
-        <h4 className="text-xs font-bold text-gray-700">Hero Headings</h4>
-        <div className="flex flex-col gap-2">
-          <label className={labelClass}>Primary Heading Line</label>
-          <input 
-            type="text" 
-            value={titlePrimary || ""} 
-            onChange={(e) => setProp((p: HeroSectionProps) => { p.titlePrimary = e.target.value; })} 
-            className={inputClass}
-            placeholder="e.g. Better care."
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className={labelClass}>Secondary Heading Line</label>
-          <input 
-            type="text" 
-            value={titleSecondary || ""} 
-            onChange={(e) => setProp((p: HeroSectionProps) => { p.titleSecondary = e.target.value; })} 
-            className={inputClass}
-            placeholder="e.g. Better you."
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className={labelClass}>Description</label>
-          <textarea 
-            value={description || ""} 
-            onChange={(e) => setProp((p: HeroSectionProps) => { p.description = e.target.value; })} 
-            className={`${inputClass} min-h-[60px] resize-y`}
-            placeholder="Hero paragraph text..."
-          />
-        </div>
-      </div>
-
       {/* Media & Reviews */}
-      <div className="flex flex-col gap-3 border-b border-gray-100 pb-4">
-        <h4 className="text-xs font-bold text-gray-700">Media & Reviews</h4>
+      <div className="flex flex-col gap-3 pb-4">
+        <h4 className="text-xs font-bold text-gray-700">Media</h4>
         <div className="flex flex-col gap-2">
           <label className={labelClass}>Doctor Image URL</label>
           <input 
@@ -155,49 +67,6 @@ export const HeroSectionSettings = () => {
             placeholder="Image path or absolute URL..."
           />
         </div>
-        <div className="flex flex-col gap-2">
-          <label className={labelClass}>Review Rating Text</label>
-          <input 
-            type="text" 
-            value={reviewRatingText || ""} 
-            onChange={(e) => setProp((p: HeroSectionProps) => { p.reviewRatingText = e.target.value; })} 
-            className={inputClass}
-            placeholder="e.g. 100% Trusted Rating"
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className={labelClass}>Review Subtext</label>
-          <input 
-            type="text" 
-            value={reviewCountText || ""} 
-            onChange={(e) => setProp((p: HeroSectionProps) => { p.reviewCountText = e.target.value; })} 
-            className={inputClass}
-            placeholder="e.g. 4.9/5 (1k+ reviews)"
-          />
-        </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex flex-col gap-3">
-        <h4 className="text-xs font-bold text-gray-700">Action Buttons</h4>
-        <div className="flex flex-col gap-2">
-          <label className={labelClass}>Primary Button Text</label>
-          <input 
-            type="text" 
-            value={primaryButtonText || ""} 
-            onChange={(e) => setProp((p: HeroSectionProps) => { p.primaryButtonText = e.target.value; })} 
-            className={inputClass}
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className={labelClass}>Secondary Button Text</label>
-          <input 
-            type="text" 
-            value={secondaryButtonText || ""} 
-            onChange={(e) => setProp((p: HeroSectionProps) => { p.secondaryButtonText = e.target.value; })} 
-            className={inputClass}
-          />
-        </div>
       </div>
     </div>
   );
@@ -206,16 +75,7 @@ export const HeroSectionSettings = () => {
 export const HeroSection = ({ 
   background = "#ffffff", 
   paddingY = 100,
-  clinicName = "Platinum Med",
-  badgeText = "Care that helps you heal",
-  titlePrimary = "Better care.",
-  titleSecondary = "Better you.",
-  description = "Next-generation clinical services with dedicated medical professionals. Book appointments online in seconds, with real-time slot availability.",
-  primaryButtonText = "Book Appointment",
-  secondaryButtonText = "Meet Specialists",
-  imageSrc = "/doctor.png",
-  reviewRatingText = "100% Trusted Rating",
-  reviewCountText = "4.9/5 (1k+ reviews)"
+  imageSrc = "/doctor.png"
 }: HeroSectionProps) => {
   const { connectors: { connect, drag }, isSelected } = useNode((state) => ({
     isSelected: state.events.selected,
@@ -233,17 +93,14 @@ export const HeroSection = ({
           <div className="w-8 h-8 rounded-full bg-[#115E59] flex items-center justify-center text-white shadow-sm">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
           </div>
-          <span className="font-extrabold text-base text-gray-900 tracking-tight">{clinicName}</span>
+          <Element id="clinicName" is={Text} text="Platinum Med" fontSize={16} fontWeight="800" color="#111827" />
         </div>
         <div className="flex items-center gap-6 text-[13px] font-bold text-gray-500">
-          <span className="hover:text-black cursor-pointer transition-colors">Home</span>
-          <span className="hover:text-black cursor-pointer transition-colors">Services</span>
-          <span className="hover:text-black cursor-pointer transition-colors">Doctors</span>
-          <span className="hover:text-black cursor-pointer transition-colors">Book appointment</span>
+          <Element id="nav1" is={Text} text="Home" fontSize={13} fontWeight="700" color="#6B7280" />
+          <Element id="nav2" is={Text} text="Services" fontSize={13} fontWeight="700" color="#6B7280" />
+          <Element id="nav3" is={Text} text="Doctors" fontSize={13} fontWeight="700" color="#6B7280" />
         </div>
-        <button className="bg-[#115E59] hover:bg-[#134E4A] text-white px-4 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm">
-          Book online
-        </button>
+        <Element id="navButton" is={Button} text="Book online" background="#115E59" color="#ffffff" borderRadius={9999} fontSize={12} paddingX={16} paddingY={6} />
       </div>
 
       {/* 2. Main 2-Column Medical Hero */}
@@ -254,26 +111,20 @@ export const HeroSection = ({
         
         {/* Left Column: Content */}
         <div className="flex flex-col items-start text-left gap-5">
-          <span className="text-[10px] font-extrabold bg-[#EBF5EE] text-[#115E59] px-3.5 py-1 rounded-full uppercase tracking-[0.12em] border border-[#A7F3D0]/20">
-            {badgeText}
-          </span>
-          <div className="flex flex-col gap-3">
-            <h1 className="text-[44px] font-black text-gray-900 tracking-tight leading-[1.12]">
-              {titlePrimary}<br/>
-              <span className="font-serif italic font-semibold text-[#115E59]">{titleSecondary}</span>
-            </h1>
-            <p className="text-[13.5px] text-gray-500 font-medium leading-relaxed max-w-md mt-1">
-              {description}
-            </p>
+          <div className="bg-[#EBF5EE] border border-[#A7F3D0]/20 rounded-full px-1">
+            <Element id="badgeText" is={Text} text="CARE THAT HELPS YOU HEAL" fontSize={10} fontWeight="800" color="#115E59" />
+          </div>
+          <div className="flex flex-col gap-0 w-full">
+            <Element id="titlePrimary" is={Text} text="Better care." fontSize={44} fontWeight="900" color="#111827" />
+            <Element id="titleSecondary" is={Text} text="Better you." fontSize={44} fontWeight="600" color="#115E59" />
+          </div>
+          <div className="w-full max-w-md">
+            <Element id="description" is={Text} text="Next-generation clinical services with dedicated medical professionals. Book appointments online in seconds, with real-time slot availability." fontSize={13.5} fontWeight="500" color="#6B7280" />
           </div>
           
-          <div className="flex items-center gap-3 mt-1.5">
-            <button className="bg-[#115E59] hover:bg-[#134E4A] text-white px-5.5 py-2.5 rounded-xl text-xs font-extrabold shadow-md hover:shadow-lg transition-all">
-              {primaryButtonText}
-            </button>
-            <button className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-5.5 py-2.5 rounded-xl text-xs font-extrabold transition-all">
-              {secondaryButtonText}
-            </button>
+          <div className="flex items-center gap-3 mt-1.5 w-full">
+            <Element id="primaryBtn" is={Button} text="Book Appointment" background="#115E59" color="#ffffff" borderRadius={12} fontSize={12} paddingX={22} paddingY={10} />
+            <Element id="secondaryBtn" is={Button} text="Meet Specialists" background="#F3F4F6" color="#1F2937" borderRadius={12} fontSize={12} paddingX={22} paddingY={10} />
           </div>
 
           {/* Tagline Row */}
@@ -300,7 +151,7 @@ export const HeroSection = ({
             <div className="flex gap-0.5 text-amber-400 text-[10px]">
               ★ ★ ★ ★ ★
             </div>
-            <span className="text-[11px] font-extrabold text-gray-900 tracking-tight leading-tight">{reviewRatingText}</span>
+            <Element id="reviewRatingText" is={Text} text="100% Trusted Rating" fontSize={11} fontWeight="800" color="#111827" />
             <div className="flex items-center gap-1.5 mt-0.5">
               {/* Overlapping Avatars */}
               <div className="flex -space-x-1.5 overflow-hidden shrink-0">
@@ -308,7 +159,7 @@ export const HeroSection = ({
                 <img className="inline-block h-[18px] w-[18px] rounded-full ring-2 ring-white object-cover" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=60" alt="" />
                 <img className="inline-block h-[18px] w-[18px] rounded-full ring-2 ring-white object-cover" src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=60" alt="" />
               </div>
-              <span className="text-[8.5px] text-gray-400 font-extrabold tracking-tight">{reviewCountText}</span>
+              <Element id="reviewCountText" is={Text} text="4.9/5 (1k+ reviews)" fontSize={8.5} fontWeight="800" color="#9CA3AF" />
             </div>
           </div>
         </div>
@@ -323,16 +174,7 @@ HeroSection.craft = {
   props: { 
     background: "#ffffff", 
     paddingY: 100,
-    clinicName: "Platinum Med",
-    badgeText: "Care that helps you heal",
-    titlePrimary: "Better care.",
-    titleSecondary: "Better you.",
-    description: "Next-generation clinical services with dedicated medical professionals. Book appointments online in seconds, with real-time slot availability.",
-    primaryButtonText: "Book Appointment",
-    secondaryButtonText: "Meet Specialists",
     imageSrc: "/doctor.png",
-    reviewRatingText: "100% Trusted Rating",
-    reviewCountText: "4.9/5 (1k+ reviews)"
   },
   rules: { canDrag: () => true },
   related: { settings: HeroSectionSettings },
