@@ -63,6 +63,7 @@ export async function POST(request: NextRequest) {
             fbPixelId: website.fbPixelId || undefined,
             customHead: website.customHead || undefined,
             customBody: website.customBody || undefined,
+            websiteId: website.id,
           };
 
           const html = generateHTML(layoutStr, meta);
@@ -101,6 +102,15 @@ export async function POST(request: NextRequest) {
     await publicDb.builderWebsite.update({
       where: { id: website.id },
       data: { isPublished: true, publishedAt: new Date() }
+    });
+
+    // Create a Version Snapshot
+    await publicDb.websiteVersion.create({
+      data: {
+        websiteId: website.id,
+        snapshot: website.design || {},
+        publishedBy: user.id
+      }
     });
 
     // 1. Write domain to Redis

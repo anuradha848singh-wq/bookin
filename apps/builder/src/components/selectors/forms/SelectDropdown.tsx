@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useNode } from "@craftjs/core";
 import { ChevronDown, Check } from "lucide-react";
+import { useFormLogic } from "./FormLogicContext";
 
 interface Option {
   id: string;
@@ -17,6 +18,9 @@ interface SelectDropdownProps {
   required?: boolean;
   primaryColor?: string;
   borderRadius?: number;
+  fieldId?: string;
+  conditionalRules?: any[];
+  conditionalLogic?: "AND" | "OR";
 }
 
 export const SelectDropdownSettings = () => {
@@ -116,7 +120,8 @@ export const SelectDropdown = ({
   ],
   required = true,
   primaryColor = "#0066FF",
-  borderRadius = 8
+  borderRadius = 8,
+  ...props
 }: SelectDropdownProps) => {
   const { connectors: { connect, drag }, isSelected, isHovered } = useNode((state) => ({
     isSelected: state.events.selected,
@@ -125,6 +130,9 @@ export const SelectDropdown = ({
 
   const [isOpen, setIsOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState<string | null>(null);
+  
+  const { setValue, evaluateRules } = useFormLogic();
+  const isVisible = evaluateRules(props.conditionalRules, props.conditionalLogic);
 
   const toggleOpen = () => {
     if (isSelected) return;
@@ -134,6 +142,9 @@ export const SelectDropdown = ({
   const handleSelect = (val: string) => {
     setSelectedValue(val);
     setIsOpen(false);
+    if (props.fieldId) {
+      setValue(props.fieldId, val);
+    }
   };
 
   const selectedOption = options?.find(o => o.value === selectedValue);
@@ -141,12 +152,17 @@ export const SelectDropdown = ({
   return (
     <div
       ref={(ref) => { connect(drag(ref as HTMLElement)); }}
-      className="w-full relative flex flex-col gap-2"
+      className={`w-full relative flex flex-col gap-2 transition-all duration-300 ${!isVisible ? "opacity-40 grayscale" : ""}`}
       style={{ 
         outline: isSelected ? "2px solid #0066FF" : isHovered ? "1px solid #3b82f6" : "none", 
         outlineOffset: "4px", 
       }}
     >
+      {!isVisible && (
+        <div className="absolute -top-3 -right-2 bg-amber-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full z-10 shadow shadow-black/20">
+          Hidden by Logic
+        </div>
+      )}
       {label && (
         <label className="block text-sm font-semibold text-gray-800">
           {label} {required && <span className="text-red-500">*</span>}

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Plus, LayoutTemplate, Layers, Search, Image as ImageIcon, FormInput, Calendar, ShoppingBag, Settings, Paintbrush, FileText, Database, Share2, Component, BarChart } from "lucide-react";
+import { Plus, LayoutTemplate, Layers, Search, Image as ImageIcon, FormInput, Calendar, ShoppingBag, Settings, Paintbrush, FileText, Database, Share2, Component, BarChart, Clock } from "lucide-react";
 
 export const Rail = ({ activeTab, setActiveTab }: { activeTab: string, setActiveTab: (t: string) => void }) => {
   
@@ -11,6 +11,7 @@ export const Rail = ({ activeTab, setActiveTab }: { activeTab: string, setActive
     { id: "components", icon: <Component size={20} strokeWidth={1.5} />, label: "Components" },
     { id: "sections", icon: <LayoutTemplate size={20} strokeWidth={1.5} />, label: "Sections" },
     { id: "theme", icon: <Paintbrush size={20} strokeWidth={1.5} />, label: "Theme" },
+    { id: "versions", icon: <Clock size={20} strokeWidth={1.5} />, label: "History" },
     { id: "cms", icon: <Database size={20} strokeWidth={1.5} />, label: "CMS" },
     { id: "forms", icon: <FormInput size={20} strokeWidth={1.5} />, label: "Forms" },
     { id: "bookings", icon: <Calendar size={20} strokeWidth={1.5} />, label: "Bookings" },

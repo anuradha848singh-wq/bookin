@@ -9,11 +9,12 @@ import { SettingsPanel } from "@/components/editor/SettingsPanel";
 import { KeyboardShortcutsOverlay } from "@/components/editor/KeyboardShortcutsOverlay";
 import { Breakpoint, getBreakpointMaxWidth } from "@/components/editor/BreakpointSwitcher";
 import { RenderNode } from "@/components/editor/RenderNode";
-import { Container } from "@/components/selectors/structure/Container";
-import { Text } from "@/components/selectors/content/Text";
+import { Container } from "@/components/editor/blocks/Container";
+import { Text } from "@/components/editor/blocks/Text";
 import { Heading } from "@/components/selectors/content/Heading";
-import { Button } from "@/components/selectors/content/Button";
-import { Image } from "@/components/selectors/media/Image";
+import { Button } from "@/components/editor/blocks/Button";
+import { Image } from "@/components/editor/blocks/Image";
+import { Navigation } from "@/components/editor/blocks/Navigation";
 import { Divider } from "@/components/selectors/content/Divider";
 import { Spacer } from "@/components/selectors/content/Spacer";
 import { HeroSection } from "@/components/selectors/structure/HeroSection";
@@ -85,6 +86,10 @@ import { RadioGroup } from "@/components/selectors/forms/RadioGroup";
 import { CheckboxGroup } from "@/components/selectors/forms/CheckboxGroup";
 import { RangeSlider } from "@/components/selectors/forms/RangeSlider";
 import { FormSubmitButton } from "@/components/selectors/forms/FormSubmitButton";
+import { FormLogicProvider } from "@/components/selectors/forms/FormLogicContext";
+import { CMSProvider } from "@/components/editor/CMSContext";
+import { ContextMenu } from "@/components/editor/ContextMenu";
+import { DeviceModeProvider } from "@/components/editor/DeviceModeContext";
 
 // Keyboard shortcuts handler component
 const KeyboardShortcuts = () => {
@@ -131,9 +136,9 @@ const KeyboardShortcuts = () => {
         e.preventDefault();
         if (selected) {
           try {
-            const node = query.node(selected.id).toSerializedNode();
+            const tree = query.node(selected.id).toNodeTree();
             const parentId = query.node(selected.id).get().data.parent || 'ROOT';
-            actions.add(query.parseSerializedNode(node).toNode(), parentId);
+            actions.addNodeTree(tree, parentId);
           } catch (error) {
             console.error('Failed to duplicate:', error);
           }
@@ -145,8 +150,8 @@ const KeyboardShortcuts = () => {
         e.preventDefault();
         if (selected) {
           try {
-            const node = query.node(selected.id).toSerializedNode();
-            setClipboard(node);
+            const tree = query.node(selected.id).toNodeTree();
+            localStorage.setItem("craft_clipboard", JSON.stringify(tree));
             console.log('Component copied to clipboard');
           } catch (error) {
             console.error('Failed to copy:', error);
@@ -159,8 +164,8 @@ const KeyboardShortcuts = () => {
         e.preventDefault();
         if (selected && selected.isDeletable) {
           try {
-            const node = query.node(selected.id).toSerializedNode();
-            setClipboard(node);
+            const tree = query.node(selected.id).toNodeTree();
+            localStorage.setItem("craft_clipboard", JSON.stringify(tree));
             actions.delete(selected.id);
             console.log('Component cut to clipboard');
           } catch (error) {
@@ -172,13 +177,14 @@ const KeyboardShortcuts = () => {
       // Ctrl/Cmd + V = Paste
       if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
         e.preventDefault();
+        const clipboard = localStorage.getItem("craft_clipboard");
         if (clipboard) {
           try {
+            const tree = JSON.parse(clipboard);
             const parentId = selected ? selected.id : 'ROOT';
-            // Check if the selected node can have children
             const canHaveChildren = selected ? query.node(selected.id).isCanvas() : true;
             const targetParent = canHaveChildren ? parentId : (selected ? query.node(selected.id).get().data.parent : 'ROOT');
-            actions.add(query.parseSerializedNode(clipboard).toNode(), targetParent || 'ROOT');
+            actions.addNodeTree(tree, targetParent || 'ROOT');
             console.log('Component pasted from clipboard');
           } catch (error) {
             console.error('Failed to paste:', error);
@@ -309,6 +315,48 @@ const LoadSavedDesign = ({ websiteId, pageSlug }: { websiteId: string, pageSlug:
   return null;
 };
 
+// Auto-scroll on drag component
+const AutoScroller = () => {
+  const { isDragging } = useEditor((state) => ({
+    isDragging: state.events.dragged !== null
+  }));
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    let frame: number;
+    const handleMouseMove = (e: MouseEvent) => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const threshold = 100; // pixels from edge
+        const speed = 15; // pixels per frame
+        
+        // Scroll vertical
+        if (e.clientY < threshold) {
+          window.scrollBy(0, -speed);
+        } else if (window.innerHeight - e.clientY < threshold) {
+          window.scrollBy(0, speed);
+        }
+
+        // Scroll horizontal
+        if (e.clientX < threshold) {
+          window.scrollBy(-speed, 0);
+        } else if (window.innerWidth - e.clientX < threshold) {
+          window.scrollBy(speed, 0);
+        }
+      });
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      cancelAnimationFrame(frame);
+    };
+  }, [isDragging]);
+
+  return null;
+};
+
 export default function BuilderClient({ websiteId }: { websiteId: string }) {
   const [activeTab, setActiveTab] = useState("sections");
   const [zoom, setZoom] = useState(100);
@@ -348,12 +396,16 @@ export default function BuilderClient({ websiteId }: { websiteId: string }) {
 
   return (
     <div className="h-full w-full flex overflow-hidden bg-white text-gray-900 font-sans">
-      <Editor resolver={{ 
-        Container, 
+      <CMSProvider>
+        <FormLogicProvider>
+          <DeviceModeProvider mode={deviceMode}>
+          <Editor resolver={{ 
+            Container, 
         Text, 
         Heading,
         Button, 
         Image,
+        Navigation,
         Divider,
         Spacer,
         HeroSection, 
@@ -429,17 +481,22 @@ export default function BuilderClient({ websiteId }: { websiteId: string }) {
         UserMenu
       }}
       onRender={RenderNode}
+      enabled={!previewMode}
+      onNodesChange={() => {
+        if (saveStatus === "saved") setSaveStatus("unsaved");
+      }}
       >
         <KeyboardShortcuts />
         <AutoSave websiteId={websiteId} pageSlug={activeSlug} onSavingChange={(saving) => { setIsSaving(saving); setSaveStatus(saving ? "saving" : "saved"); }} />
         <LoadSavedDesign websiteId={websiteId} pageSlug={activeSlug} />
         <KeyboardShortcutsOverlay />
+        <AutoScroller />
         
         {/* 1. Far Left Rail */}
-        <Rail activeTab={activeTab} setActiveTab={setActiveTab} />
+        {!previewMode && <Rail activeTab={activeTab} setActiveTab={setActiveTab} />}
         
         {/* 2. Left Workspace Panel (Context Aware) */}
-        <LeftPanel activeTab={activeTab} activeSlug={activeSlug} onPageSwitch={setActiveSlug} />
+        {!previewMode && <LeftPanel activeTab={activeTab} activeSlug={activeSlug} onPageSwitch={setActiveSlug} websiteId={websiteId} />}
 
         {/* Center Canvas Area */}
         <div className="flex-1 flex flex-col overflow-hidden bg-[#FAFAFA] relative">
@@ -457,6 +514,9 @@ export default function BuilderClient({ websiteId }: { websiteId: string }) {
               saveStatus={saveStatus}
               setSaveStatus={setSaveStatus}
               onOpenPages={() => setActiveTab("pages")}
+              websiteId={websiteId}
+              zoom={zoom}
+              setZoom={setZoom}
             />
           </div>
           
@@ -490,10 +550,16 @@ export default function BuilderClient({ websiteId }: { websiteId: string }) {
         </div>
 
         {/* 3. Right Inspector (Content / Design / Advanced tabs) */}
-        <div className="w-[320px] bg-white border-l border-[#E5E5E5] flex flex-col flex-shrink-0 z-20">
-          <SettingsPanel />
-        </div>
+        {!previewMode && (
+          <div className="w-[320px] bg-white border-l border-[#E5E5E5] flex flex-col flex-shrink-0 z-20">
+            <SettingsPanel />
+          </div>
+        )}
+        {!previewMode && <ContextMenu />}
       </Editor>
+      </DeviceModeProvider>
+      </FormLogicProvider>
+      </CMSProvider>
     </div>
   );
 }

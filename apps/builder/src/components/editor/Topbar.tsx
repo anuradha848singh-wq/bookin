@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useEditor } from "@craftjs/core";
-import { ChevronDown, Monitor, Tablet, Smartphone, Undo2, Redo2, Loader2, Check, Upload, HelpCircle, Eye, EyeOff, AlertCircle, Cloud, Search, Activity, Gauge, Palette, Code2, Database, ShoppingBag, Users, Zap } from "lucide-react";
+import { ChevronDown, Monitor, Tablet, Smartphone, Undo2, Redo2, Loader2, Check, Upload, HelpCircle, Eye, EyeOff, AlertCircle, Cloud, Search, Activity, Gauge, Palette, Code2, Database, ShoppingBag, Users, Zap, ZoomIn, ZoomOut } from "lucide-react";
 import { SEOAnalyzer } from "./SEOAnalyzer";
 import { AnalyticsSettings } from "./AnalyticsSettings";
 import { PerformanceMonitor } from "./PerformanceMonitor";
@@ -23,6 +23,9 @@ interface TopbarProps {
   saveStatus: "saved" | "saving" | "unsaved" | "error";
   setSaveStatus: (status: "saved" | "saving" | "unsaved" | "error") => void;
   onOpenPages: () => void;
+  websiteId: string;
+  zoom?: number;
+  setZoom?: (zoom: number) => void;
 }
 
 export const Topbar = ({
@@ -35,6 +38,9 @@ export const Topbar = ({
   saveStatus,
   setSaveStatus,
   onOpenPages,
+  websiteId,
+  zoom = 100,
+  setZoom,
 }: TopbarProps) => {
   const { query, actions, canUndo, canRedo } = useEditor((_, query) => ({
     canUndo: query.history.canUndo(),
@@ -60,7 +66,7 @@ export const Topbar = ({
       const res = await fetch("/api/studio/publish", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ websiteSlug: activeSlug })
+        body: JSON.stringify({ websiteSlug: websiteId })
       });
       
       if (!res.ok) throw new Error("Publish failed");
@@ -128,6 +134,33 @@ export const Topbar = ({
         </div>
 
         <div className="builder-topbar-divider" />
+
+        {setZoom && (
+          <>
+            <div className="flex items-center gap-1 bg-[#1A1A1E] border border-[#2C2D33] p-1 rounded-lg">
+              <button
+                type="button"
+                onClick={() => setZoom(Math.max(25, zoom - 25))}
+                className="builder-icon-button"
+                title="Zoom Out"
+              >
+                <ZoomOut size={15} />
+              </button>
+              <div className="text-xs text-gray-400 font-medium px-2 min-w-[48px] text-center">
+                {zoom}%
+              </div>
+              <button
+                type="button"
+                onClick={() => setZoom(Math.min(200, zoom + 25))}
+                className="builder-icon-button"
+                title="Zoom In"
+              >
+                <ZoomIn size={15} />
+              </button>
+            </div>
+            <div className="builder-topbar-divider" />
+          </>
+        )}
 
         <div className="flex items-center gap-1 bg-[#1A1A1E] border border-[#2C2D33] p-1 rounded-lg">
           <button

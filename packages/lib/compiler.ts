@@ -17,6 +17,7 @@ export interface CompilerMeta {
   fbPixelId?: string;
   customHead?: string;
   customBody?: string;
+  websiteId?: string;
 }
 
 export function generateHTML(jsonString: string, meta: CompilerMeta = {}): string {
@@ -76,17 +77,34 @@ export function generateHTML(jsonString: string, meta: CompilerMeta = {}): strin
         case 'Text':
           elementHtml = `<div class="${props.className || ''}" style="font-size: ${props.fontSize || 16}px; text-align: ${props.textAlign || 'left'}; font-weight: ${props.fontWeight || '400'}; color: ${props.color || '#111827'};">${props.text || ''}</div>`;
           break;
+
+        case 'Heading':
+          const fontSizes: Record<string, number> = { h1: 48, h2: 36, h3: 28, h4: 24, h5: 20, h6: 16 };
+          const level = props.level || 'h2';
+          const fontSize = fontSizes[level as string] || 36;
+          elementHtml = `<${level} class="${props.className || ''}" style="font-size: ${fontSize}px; text-align: ${props.textAlign || 'left'}; font-weight: 700; color: ${props.color || '#111827'}; padding: 8px 4px; margin: 0;">${props.text || 'Heading'}</${level}>`;
+          break;
         
         case 'Button':
-          elementHtml = `<button class="${props.className || ''}" style="background-color: ${props.background || '#111827'}; color: ${props.color || '#ffffff'}; padding: ${props.paddingY || 12}px ${props.paddingX || 24}px; font-size: ${props.fontSize || 14}px; border-radius: ${props.borderRadius || 4}px; border: none; cursor: pointer;">${props.text || 'Button'}</button>`;
+          const buttonStyle = `background-color: ${props.background || '#111827'}; color: ${props.color || '#ffffff'}; padding: ${props.paddingY || 12}px ${props.paddingX || 24}px; font-size: ${props.fontSize || 14}px; border-radius: ${props.borderRadius || 4}px; border: none; cursor: pointer;`;
+          if (props.actionType === 'link' && props.linkUrl) {
+            elementHtml = `<a href="${props.linkUrl}" class="${props.className || ''}" style="${buttonStyle} text-decoration: none; display: inline-block; text-align: center;">${props.text || 'Button'}</a>`;
+          } else if (props.actionType === 'modal' && props.modalId) {
+            elementHtml = `<button onclick="document.dispatchEvent(new CustomEvent('open-modal', { detail: { id: '${props.modalId}' } }))" class="${props.className || ''}" style="${buttonStyle}">${props.text || 'Button'}</button>`;
+          } else {
+            elementHtml = `<button class="${props.className || ''}" style="${buttonStyle}">${props.text || 'Button'}</button>`;
+          }
           break;
         
         case 'Container':
-          elementHtml = `<div class="${props.className || ''} ${props.parallax ? 'bg-fixed' : ''}" style="background-color: ${props.background || 'transparent'}; padding: ${props.padding || 0}px; border-radius: ${props.borderRadius || 0}px; ${props.direction ? `display: flex; flex-direction: ${props.direction};` : ''} ${props.justify ? `justify-content: ${props.justify};` : ''} ${props.align ? `align-items: ${props.align};` : ''} ${props.parallax ? 'background-attachment: fixed; background-position: center; background-size: cover;' : ''}">${childrenHtml}</div>`;
+          const containerStyle = `background-color: ${props.background || 'transparent'}; padding: ${typeof props.padding === 'number' ? `${props.padding}px` : props.padding || 0}; border-radius: ${props.borderRadius || 0}px; ${props.display ? `display: ${props.display};` : ''} ${props.display === 'grid' ? `grid-template-columns: ${props.gridTemplateColumns || '1fr 1fr'}; grid-template-rows: ${props.gridTemplateRows || 'auto'};` : ''} ${props.flexDirection ? `flex-direction: ${props.flexDirection};` : ''} ${props.alignItems ? `align-items: ${props.alignItems};` : ''} ${props.justifyContent ? `justify-content: ${props.justifyContent};` : ''} ${props.gap ? `gap: ${props.gap}px;` : ''} width: ${props.width || '100%'}; height: ${props.height || 'auto'}; ${props.boxShadow && props.boxShadow !== 'none' ? `box-shadow: ${props.boxShadow};` : ''} ${props.opacity !== undefined ? `opacity: ${props.opacity};` : ''} ${props.zIndex !== undefined ? `z-index: ${props.zIndex};` : ''} ${props.overflow && props.overflow !== 'visible' ? `overflow: ${props.overflow};` : ''} ${props.position ? `position: ${props.position};` : ''}`;
+          elementHtml = `<div class="${props.className || ''}" style="${containerStyle}">${childrenHtml}</div>`;
           break;
         
         case 'Image':
-          elementHtml = `<img src="${props.src || 'https://via.placeholder.com/400x300'}" alt="${props.alt || 'Image'}" class="${props.className || ''}" style="width: ${props.width || '100%'}; height: ${props.height || 'auto'}; object-fit: ${props.objectFit || 'cover'}; border-radius: ${props.borderRadius || 0}px;" />`;
+          const imageStyle = `width: ${props.width || '100%'}; height: ${props.height || 'auto'}; object-fit: ${props.objectFit || 'cover'}; border-radius: ${props.borderRadius || 0}px; padding: ${props.padding || 0}px; ${props.shadow && props.shadow !== 'none' ? `box-shadow: ${props.shadow};` : ''} ${props.opacity !== undefined ? `opacity: ${props.opacity};` : ''} ${props.zIndex !== undefined ? `z-index: ${props.zIndex};` : ''} ${props.overflow && props.overflow !== 'visible' ? `overflow: ${props.overflow};` : ''} ${props.position ? `position: ${props.position};` : ''} ${props.aspectRatio && props.aspectRatio !== 'auto' ? `aspect-ratio: ${props.aspectRatio};` : ''}`;
+          const lazyLoadStr = props.lazyLoad !== false ? 'loading="lazy" decoding="async"' : '';
+          elementHtml = `<img src="${props.src || 'https://via.placeholder.com/400x300'}" alt="${props.alt || 'Image'}" class="${props.className || ''}" style="${imageStyle}" ${lazyLoadStr} />`;
           break;
         
         case 'HeroSection':
@@ -223,6 +241,98 @@ export function generateHTML(jsonString: string, meta: CompilerMeta = {}): strin
         case 'CRMFormConnector':
           // These are complex components, we'll wrap them in a generic container for now
           elementHtml = `<div class="component-wrapper ${type.toLowerCase()} ${props.className || ''}">${childrenHtml}</div>`;
+          break;
+
+        case 'Navigation':
+          const links = props.links || [];
+          const linksHtml = links.map((l: any) => `<a href="${l.href || '#'}" class="nav-link-${id}" style="color: ${props.color || '#374151'}; font-size: ${props.fontSize || 14}px; font-weight: ${props.fontWeight || '500'}; text-decoration: none;">${l.label}</a>`).join('');
+          elementHtml = `<nav class="${props.className || ''}" style="display: flex; flex-direction: ${props.direction || 'row'}; gap: ${props.gap || 20}px; justify-content: ${props.justifyContent || 'flex-start'}; width: ${props.width || '100%'}; padding: ${typeof props.padding === 'number' ? props.padding + 'px' : props.padding};"><style>.nav-link-${id} { transition: color 0.2s ease; } .nav-link-${id}:hover { color: ${props.hoverColor || '#2563eb'} !important; }</style>${linksHtml}</nav>`;
+          break;
+
+        case 'Video':
+          const getEmbedUrl = (link?: string) => {
+            if (!link) return "";
+            let videoId = "";
+            if (link.includes("youtube.com/watch")) {
+              const urlParams = new URLSearchParams(new URL(link).search);
+              videoId = urlParams.get("v") || "";
+            } else if (link.includes("youtu.be/")) {
+              videoId = link.split("youtu.be/")[1]?.split("?")[0] || "";
+            } else if (link.includes("youtube.com/embed/")) {
+              return link;
+            }
+            if (videoId) return `https://www.youtube.com/embed/${videoId}`;
+            return link;
+          };
+          const embedUrl = getEmbedUrl(props.url);
+          elementHtml = embedUrl 
+            ? `<div class="${props.className || ''}" style="padding: ${props.padding || 0}px; width: ${props.width || '100%'}; height: ${props.height || '315px'}; box-sizing: border-box; display: inline-flex; justify-content: center; align-items: center;"><iframe src="${embedUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width: 100%; height: 100%; border-radius: ${props.borderRadius || 8}px; box-shadow: ${props.shadow || 'none'};"></iframe></div>`
+            : `<div class="${props.className || ''}" style="padding: ${props.padding || 0}px; width: ${props.width || '100%'}; height: ${props.height || '315px'}; box-sizing: border-box; display: inline-flex; justify-content: center; align-items: center;"><div style="width: 100%; height: 100%; background: #F3F4F6; border-radius: ${props.borderRadius || 8}px;"></div></div>`;
+          break;
+
+        case 'Icon':
+          elementHtml = `<div class="${props.className || ''}" style="display: inline-flex; align-items: center; justify-content: center; padding: ${props.padding || 8}px; background-color: ${props.backgroundColor || '#F0FDFA'}; border-radius: ${props.borderRadius || 8}px; color: ${props.color || '#115E59'}; box-sizing: border-box;"><svg width="${props.size || 24}" height="${props.size || 24}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg></div>`;
+          break;
+
+        case 'FormEmbed':
+          elementHtml = `<div class="${props.className || ''}" style="margin: ${props.margin || 24}px 0; border-radius: ${props.borderRadius || 12}px; width: 100%; box-sizing: border-box;">
+             <div style="padding: 24px; border: 1px dashed ${props.themeColor || '#4F46E5'}aa; background: ${props.themeColor || '#4F46E5'}04; border-radius: ${props.borderRadius || 12}px; text-align: center; font-family: Inter, sans-serif;">
+                <p style="margin: 0; font-weight: 600; color: #111827;">Interactive Form Embedded</p>
+                <p style="margin: 4px 0 0 0; font-size: 12px; color: #6b7280;">ID: ${props.formId || 'None'}</p>
+             </div>
+          </div>`;
+          break;
+
+        case 'BookingWidgetBlock':
+          elementHtml = `<div class="${props.className || ''}" style="margin: 32px auto; max-width: 48rem; padding: 24px; border: 1px solid #E5E5E5; border-radius: 12px; background: white;">
+             <h3 style="text-align: center; font-weight: bold; color: ${props.themeColor || '#3b82f6'};">Booking Engine Loaded</h3>
+             <p style="text-align: center; font-size: 14px; color: #6b7280;">Category Filter: ${props.defaultCategory || 'All'}</p>
+          </div>`;
+          break;
+
+        case 'ContactForm':
+          elementHtml = `
+            <div class="${props.className || ''}" style="background-color: ${props.backgroundColor || '#ffffff'}; color: ${props.textColor || '#111827'}; border-radius: ${props.borderRadius || 12}px; padding: 32px; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); border: 1px solid #E5E5E5; max-width: 48rem; margin: 0 auto;">
+              ${(props.title || props.description) ? `
+                <div style="margin-bottom: 32px;">
+                  ${props.title ? `<h3 style="font-size: 24px; font-weight: 700; margin-bottom: 8px;">${props.title}</h3>` : ''}
+                  ${props.description ? `<p style="opacity: 0.7; line-height: 1.625;">${props.description}</p>` : ''}
+                </div>
+              ` : ''}
+              
+              <form action="/api/studio/forms/submit" method="POST" style="display: flex; flex-direction: column; gap: 20px;">
+                <input type="hidden" name="websiteId" value="${meta.websiteId || ''}" />
+                <input type="hidden" name="formName" value="${props.title || 'Contact Form'}" />
+                
+                <div style="${props.layout === 'horizontal' ? 'display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px;' : 'display: flex; flex-direction: column; gap: 20px;'}">
+                  <div>
+                    <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 4px; opacity: 0.8;">Full Name</label>
+                    <input type="text" name="name" required placeholder="Jane Doe" style="width: 100%; padding: 12px 16px; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: ${Math.min(props.borderRadius || 12, 8)}px; font-size: 16px;" />
+                  </div>
+                  <div>
+                    <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 4px; opacity: 0.8;">Email Address</label>
+                    <input type="email" name="email" required placeholder="jane@example.com" style="width: 100%; padding: 12px 16px; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: ${Math.min(props.borderRadius || 12, 8)}px; font-size: 16px;" />
+                  </div>
+                </div>
+
+                ${props.showPhoneField ? `
+                  <div>
+                    <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 4px; opacity: 0.8;">Phone Number (Optional)</label>
+                    <input type="tel" name="phone" placeholder="+1 (555) 000-0000" style="width: 100%; padding: 12px 16px; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: ${Math.min(props.borderRadius || 12, 8)}px; font-size: 16px;" />
+                  </div>
+                ` : ''}
+
+                <div>
+                  <label style="display: block; font-size: 14px; font-weight: 600; margin-bottom: 4px; opacity: 0.8;">Message</label>
+                  <textarea name="message" required rows="4" placeholder="How can we help you?" style="width: 100%; padding: 12px 16px; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: ${Math.min(props.borderRadius || 12, 8)}px; font-size: 16px; min-height: 120px; resize: vertical;"></textarea>
+                </div>
+
+                <button type="submit" style="margin-top: 8px; padding: 16px 32px; font-weight: 700; color: white; background-color: ${props.buttonColor || '#0066FF'}; border-radius: ${Math.min(props.borderRadius || 12, 8)}px; border: none; cursor: pointer; font-size: 16px;">
+                  ${props.buttonText || 'Send Message'}
+                </button>
+              </form>
+            </div>
+          `;
           break;
 
         default:

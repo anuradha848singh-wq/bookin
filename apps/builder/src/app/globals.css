@@ -45,7 +45,57 @@ html, body {
   background: #4B4D57;
 }
 .hide-scrollbar::-webkit-scrollbar { display: none; }
-.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Breakpoint Visibility Editor Overrides */
+.craft-editor .hide-desktop { opacity: 0.3 !important; outline: 1px dashed red; }
+.craft-editor .hide-tablet { opacity: 0.3 !important; outline: 1px dashed orange; }
+.craft-editor .hide-mobile { opacity: 0.3 !important; outline: 1px dashed yellow; }
+
+/* Scroll Animations */
+.scroll-animate {
+  opacity: 0;
+  animation-duration: var(--animate-duration, 500ms);
+  animation-delay: var(--animate-delay, 0ms);
+  animation-fill-mode: forwards;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.scroll-animate.is-visible.animate-type-fade-in { animation-name: animFadeIn; }
+.scroll-animate.is-visible.animate-type-slide-up { animation-name: animSlideUp; }
+.scroll-animate.is-visible.animate-type-slide-left { animation-name: animSlideLeft; }
+.scroll-animate.is-visible.animate-type-slide-right { animation-name: animSlideRight; }
+.scroll-animate.is-visible.animate-type-zoom-in { animation-name: animZoomIn; }
+
+@keyframes animFadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes animSlideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes animSlideLeft { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes animSlideRight { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes animZoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+  /* Breakpoint Visibility System */
+  @media (max-width: 1199px) { 
+    .hide-tablet { display: none !important; } 
+  }
+  @media (max-width: 767px) { 
+    .hide-mobile { display: none !important; } 
+  }
+  @media (min-width: 1200px) { 
+    .hide-desktop { display: none !important; } 
+  }
+
+  /* Editor Overrides for Hidden Elements */
+  /* When inside the builder, we show hidden elements at 30% opacity instead of actually hiding them */
+  .craft-editor.device-desktop .hide-desktop,
+  .craft-editor.device-tablet .hide-tablet,
+  .craft-editor.device-mobile .hide-mobile {
+    display: flex !important; /* Overrides the display: none */
+    opacity: 0.3 !important;
+    pointer-events: none; /* Let clicks pass through if needed, though Craft might intercept */
+  }
 
 /* ================================================================
    BUILDER TOPBAR

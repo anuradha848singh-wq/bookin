@@ -952,6 +952,7 @@ model BuilderPage {
   isHome       Boolean  @default(false)
   isMemberOnly Boolean  @default(false)
   seo          Json? // Meta titles, descriptions, open graph tags
+  versions     PageVersion[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -959,6 +960,17 @@ model BuilderPage {
 
   @@unique([websiteId, slug]) // Ensure unique page slugs per website
   @@index([websiteId])
+}
+
+model PageVersion {
+  id          String   @id @default(cuid())
+  pageId      String
+  page        BuilderPage @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  name        String
+  data        Json // Full serialized design JSON
+  createdAt   DateTime @default(now())
+
+  @@index([pageId])
 }
 
 model WebsiteVersion {

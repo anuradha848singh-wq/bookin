@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import { useNode } from "@craftjs/core";
-import { Check } from "lucide-react";
+import { Check, CheckSquare, Square } from "lucide-react";
+import { useFormLogic } from "./FormLogicContext";
 
 interface CheckboxOption {
   id: string;
@@ -18,10 +19,13 @@ interface CheckboxGroupProps {
   layout?: "vertical" | "horizontal" | "cards";
   primaryColor?: string;
   borderRadius?: number;
+  fieldId?: string;
+  conditionalRules?: any[];
+  conditionalLogic?: "AND" | "OR";
 }
 
 export const CheckboxGroupSettings = () => {
-  const { actions: { setProp }, label, options, required, showSelectAll, layout, primaryColor, borderRadius } = useNode((node) => ({
+  const { actions: { setProp }, label, options, required, showSelectAll, layout, primaryColor, borderRadius, fieldId, conditionalRules, conditionalLogic } = useNode((node) => ({
     label: node.data.props.label,
     options: node.data.props.options as CheckboxOption[],
     required: node.data.props.required,
@@ -29,6 +33,9 @@ export const CheckboxGroupSettings = () => {
     layout: node.data.props.layout,
     primaryColor: node.data.props.primaryColor,
     borderRadius: node.data.props.borderRadius,
+    fieldId: node.data.props.fieldId,
+    conditionalRules: node.data.props.conditionalRules,
+    conditionalLogic: node.data.props.conditionalLogic,
   }));
 
   const updateOption = (index: number, key: keyof CheckboxOption, value: string) => {
@@ -52,6 +59,7 @@ export const CheckboxGroupSettings = () => {
       <div className="flex flex-col gap-3">
         <label className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Field Settings</label>
         <input type="text" value={label || ""} onChange={(e) => setProp((p: CheckboxGroupProps) => { p.label = e.target.value; })} className="w-full px-3 py-2 text-[12px] bg-[#FAFAFA] border border-[#E5E5E5] rounded-md focus:outline-none font-bold text-gray-800" placeholder="Group Label (e.g. Select Services)" />
+        <input type="text" value={fieldId || ""} onChange={(e) => setProp((p: CheckboxGroupProps) => { p.fieldId = e.target.value; })} className="w-full px-3 py-2 text-[12px] bg-[#FAFAFA] border border-[#E5E5E5] rounded-md focus:outline-none font-bold text-gray-800" placeholder="Field ID (e.g. checkbox_group_1)" />
         
         <div className="flex flex-col gap-2 mt-1">
           <label className="flex items-center gap-2 text-[12px] text-gray-700 cursor-pointer">
@@ -138,7 +146,8 @@ export const CheckboxGroup = ({
   showSelectAll = true,
   layout = "vertical",
   primaryColor = "#0066FF",
-  borderRadius = 8
+  borderRadius = 8,
+  ...props
 }: CheckboxGroupProps) => {
   const { connectors: { connect, drag }, isSelected, isHovered } = useNode((state) => ({
     isSelected: state.events.selected,
@@ -146,20 +155,28 @@ export const CheckboxGroup = ({
   }));
 
   const [selectedValues, setSelectedValues] = useState<string[]>([]);
+  const { setValue, evaluateRules } = useFormLogic();
+  const isVisible = evaluateRules(props.conditionalRules, props.conditionalLogic);
 
-  const handleSelect = (val: string) => {
+  const handleToggle = (val: string) => {
     if (isSelected) return;
-    setSelectedValues(prev => 
-      prev.includes(val) ? prev.filter(v => v !== val) : [...prev, val]
-    );
+    const newValues = selectedValues.includes(val) 
+      ? selectedValues.filter(v => v !== val)
+      : [...selectedValues, val];
+    
+    setSelectedValues(newValues);
+    if (props.fieldId) {
+      setValue(props.fieldId, newValues.join(","));
+    }
   };
 
   const handleSelectAll = () => {
     if (isSelected || !options) return;
-    if (selectedValues.length === options.length) {
-      setSelectedValues([]); // Deselect all
-    } else {
-      setSelectedValues(options.map(o => o.value)); // Select all
+    const all = options.map(o => o.value);
+    const newValues = selectedValues.length === options.length ? [] : all;
+    setSelectedValues(newValues);
+    if (props.fieldId) {
+      setValue(props.fieldId, newValues.join(","));
     }
   };
 
@@ -228,7 +245,7 @@ export const CheckboxGroup = ({
             return (
               <div 
                 key={opt.id}
-                onClick={() => handleSelect(opt.value)}
+                onClick={() => handleToggle(opt.value)}
                 className={`p-4 border-2 cursor-pointer transition-all flex flex-col items-center justify-center text-center ${isActive ? 'bg-blue-50' : 'bg-white hover:border-gray-300'}`}
                 style={{ 
                   borderRadius: `${borderRadius}px`,
@@ -249,7 +266,7 @@ export const CheckboxGroup = ({
               <label 
                 key={opt.id}
                 className="flex items-center gap-3 cursor-pointer group"
-                onClick={(e) => { e.preventDefault(); handleSelect(opt.value); }}
+                onClick={(e) => { e.preventDefault(); handleToggle(opt.value); }}
               >
                 <div className="group-hover:opacity-80 transition-opacity">
                   {renderCheck(isActive)}

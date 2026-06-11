@@ -5,21 +5,23 @@ import { useEditor, Element } from "@craftjs/core";
 import { Container } from "./blocks/Container";
 import { Text } from "./blocks/Text";
 import { Button } from "./blocks/Button";
-import { HeroSection } from "./blocks/HeroSection";
-import { ServicesGrid } from "./blocks/ServicesGrid";
-import { ServiceShowcase } from "./blocks/ServiceShowcase";
-import { StaffShowcase } from "./blocks/StaffShowcase";
-import { BookingWidgetConnector, CRMFormConnector } from "./blocks/Connectors";
+import { HeroSection } from "../selectors/structure/HeroSection";
+import { ServicesGrid } from "../selectors/structure/ServicesGrid";
+import { ServiceShowcase } from "../selectors/connectors/ServiceShowcase";
+import { StaffShowcase } from "../selectors/connectors/StaffShowcase";
+import { BookingWidgetConnector, CRMFormConnector } from "../selectors/connectors/Connectors";
 import { BookingWidgetBlock } from "./blocks/BookingWidgetBlock";
 import { FormEmbed } from "./blocks/FormEmbed";
 import { Image } from "./blocks/Image";
 import { Video } from "./blocks/Video";
+import { Navigation } from "./blocks/Navigation";
 import { Divider } from "./blocks/Divider";
 import { Spacer } from "./blocks/Spacer";
-import { Icon } from "./blocks/Icon";
 import { Accordion } from "./blocks/Accordion";
 import { Modal } from "./blocks/Modal";
-import { Tabs as TabsBlock } from "./blocks/Tabs";
+import { ThemePanel } from "./ThemePanel";
+import { VersionsPanel } from "./VersionsPanel";
+import { SeoSettingsPanel } from "./SeoSettingsPanel";
 import { Search, X, Sparkles, Wand2, FilePlus, FileText, MoreHorizontal } from "lucide-react";
 
 interface BuilderPageMeta {
@@ -32,11 +34,13 @@ interface BuilderPageMeta {
 export const LeftPanel = ({ 
   activeTab,
   activeSlug,
-  onPageSwitch
+  onPageSwitch,
+  websiteId
 }: { 
   activeTab: string;
   activeSlug: string;
   onPageSwitch: (newSlug: string) => void;
+  websiteId: string;
 }) => {
   const { connectors, actions, query } = useEditor();
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -92,6 +96,7 @@ export const LeftPanel = ({
           {activeTab === "components" && "Components"}
           {activeTab === "sections" && "Sections"}
           {activeTab === "theme" && "Theme Settings"}
+          {activeTab === "versions" && "Version History"}
           {activeTab === "cms" && "CMS Collections"}
         </span>
         <button className="text-gray-400 hover:text-white transition-colors bg-transparent border-none cursor-pointer"><X size={16} /></button>
@@ -143,9 +148,9 @@ export const LeftPanel = ({
                     <span className="text-[10px] text-indigo-400 cursor-pointer">See all</span>
                   </div>
                   <div className="builder-thumbnail-grid">
-                    <DraggableThumbnail element={<Element is={HeroSection} position="absolute" x={50} y={50} canvas />} label="Hero Left Align" thumbnailType="hero" badge="New" />
-                    <DraggableThumbnail element={<Element is={HeroSection} position="absolute" x={50} y={50} canvas />} label="Hero Center" thumbnailType="hero" />
-                    <DraggableThumbnail element={<Element is={HeroSection} position="absolute" x={50} y={50} canvas />} label="Hero Split" thumbnailType="hero" badge="AI" />
+                    <DraggableThumbnail element={<Element is={HeroSection} canvas />} label="Hero Left Align" thumbnailType="hero" badge="New" />
+                    <DraggableThumbnail element={<Element is={HeroSection} canvas />} label="Hero Center" thumbnailType="hero" />
+                    <DraggableThumbnail element={<Element is={HeroSection} canvas />} label="Hero Split" thumbnailType="hero" badge="AI" />
                   </div>
                 </>
               )}
@@ -157,8 +162,8 @@ export const LeftPanel = ({
                     <span className="text-[10px] text-indigo-400 cursor-pointer">See all</span>
                   </div>
                   <div className="builder-thumbnail-grid">
-                    <DraggableThumbnail element={<Element is={ServicesGrid} position="absolute" x={50} y={50} canvas />} label="Feature Grid 3x3" thumbnailType="feature" />
-                    <DraggableThumbnail element={<Element is={ServicesGrid} position="absolute" x={50} y={50} canvas />} label="Feature Cards" thumbnailType="feature" badge="New" />
+                    <DraggableThumbnail element={<Element is={ServicesGrid} canvas />} label="Feature Grid 3x3" thumbnailType="feature" />
+                    <DraggableThumbnail element={<Element is={ServicesGrid} canvas />} label="Feature Cards" thumbnailType="feature" badge="New" />
                   </div>
                 </>
               )}
@@ -169,10 +174,11 @@ export const LeftPanel = ({
                     <span className="text-xs font-semibold text-white">Basic Elements</span>
                   </div>
                   <div className="builder-thumbnail-grid">
-                    <DraggableThumbnail element={<Element is={Text} text="Heading" fontSize={32} fontWeight="bold" position="absolute" x={100} y={100} />} label="Heading" thumbnailType="text" />
-                    <DraggableThumbnail element={<Element is={Text} text="Paragraph text goes here." position="absolute" x={100} y={100} />} label="Paragraph" thumbnailType="text" />
-                    <DraggableThumbnail element={<Element is={Button} text="Button" position="absolute" x={100} y={100} />} label="Button" thumbnailType="button" />
-                    <DraggableThumbnail element={<Element is={Image} position="absolute" x={100} y={100} width={300} height={200} canvas />} label="Image" thumbnailType="grid" />
+                    <DraggableThumbnail element={<Element is={Text} text="Heading" fontSize={32} fontWeight="bold" />} label="Heading" thumbnailType="text" />
+                    <DraggableThumbnail element={<Element is={Text} text="Paragraph text goes here." />} label="Paragraph" thumbnailType="text" />
+                    <DraggableThumbnail element={<Element is={Button} text="Button" />} label="Button" thumbnailType="button" />
+                    <DraggableThumbnail element={<Element is={Image} canvas />} label="Image" thumbnailType="grid" />
+                    <DraggableThumbnail element={<Element is={Navigation} canvas />} label="Navigation" thumbnailType="header" />
                   </div>
                 </>
               )}
@@ -201,7 +207,23 @@ export const LeftPanel = ({
                 </div>
               ))}
             </div>
+            
+            <SeoSettingsPanel activeSlug={activeSlug} />
           </div>
+        )}
+
+        {/* ======================================= */}
+        {/* THEME TAB */}
+        {/* ======================================= */}
+        {activeTab === "theme" && (
+          <ThemePanel />
+        )}
+
+        {/* ======================================= */}
+        {/* VERSIONS TAB */}
+        {/* ======================================= */}
+        {activeTab === "versions" && (
+          <VersionsPanel websiteId={websiteId} activeSlug={activeSlug} />
         )}
 
       </div>

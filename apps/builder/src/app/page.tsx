@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { Layout, Check, ArrowRight, Monitor, Edit3, Rocket } from "lucide-react";
+import { Layout, Check, ArrowRight, Monitor, Edit3, Rocket, Layers, Sparkles, Zap } from "lucide-react";
 
 export const metadata = {
   title: "Bookin Studio | Create a Website You're Proud Of",
@@ -9,335 +9,203 @@ export const metadata = {
 
 export default function LandingPage() {
   return (
-    <div className="wix-landing-container">
-      <style dangerouslySetInnerHTML={{__html: `
-        @import url('https://fonts.googleapis.com/css2?family=Helvetica+Neue:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap');
-        
-        * { box-sizing: border-box; }
-        
-        .wix-landing-container {
-          min-height: 100vh;
-          font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-          background: #ffffff;
-          color: #111111;
-        }
-
-        /* Navigation */
-        .wix-nav {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          height: 72px;
-          background: #ffffff;
-          border-bottom: 1px solid #E5E7EB;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0 40px;
-          z-index: 100;
-        }
-
-        .wix-logo {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-weight: 700;
-          font-size: 22px;
-          letter-spacing: -0.5px;
-          text-decoration: none;
-          color: #000;
-        }
-
-        .wix-nav-links {
-          display: flex;
-          gap: 32px;
-        }
-
-        .wix-nav-links a {
-          text-decoration: none;
-          color: #333333;
-          font-size: 15px;
-          font-weight: 500;
-          transition: color 0.2s;
-        }
-
-        .wix-nav-links a:hover {
-          color: #0058FF;
-        }
-
-        .wix-nav-actions {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-        }
-
-        .wix-login-btn {
-          text-decoration: none;
-          color: #0058FF;
-          font-weight: 500;
-          font-size: 15px;
-        }
-
-        .wix-cta-btn {
-          text-decoration: none;
-          background: #0058FF;
-          color: #ffffff;
-          padding: 10px 24px;
-          border-radius: 100px;
-          font-size: 15px;
-          font-weight: 600;
-          transition: background 0.2s;
-        }
-
-        .wix-cta-btn:hover {
-          background: #0045CC;
-        }
-
-        /* Hero Section */
-        .wix-hero {
-          padding: 140px 40px 80px 40px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          text-align: center;
-          background: #FAFAFA;
-        }
-
-        .wix-hero-title {
-          font-size: 64px;
-          font-weight: 700;
-          line-height: 1.1;
-          letter-spacing: -1.5px;
-          max-width: 800px;
-          margin: 0 0 24px 0;
-          color: #111111;
-        }
-
-        .wix-hero-subtitle {
-          font-size: 20px;
-          color: #4B5563;
-          max-width: 600px;
-          margin: 0 0 40px 0;
-          line-height: 1.5;
-        }
-
-        .wix-hero-cta {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          background: #0058FF;
-          color: #ffffff;
-          text-decoration: none;
-          padding: 16px 40px;
-          border-radius: 100px;
-          font-size: 18px;
-          font-weight: 600;
-          transition: transform 0.2s, background 0.2s;
-        }
-
-        .wix-hero-cta:hover {
-          background: #0045CC;
-          transform: translateY(-2px);
-        }
-
-        .wix-hero-note {
-          margin-top: 16px;
-          font-size: 14px;
-          color: #6B7280;
-        }
-
-        /* Image Showcase */
-        .wix-showcase {
-          max-width: 1100px;
-          margin: 0 auto;
-          padding: 0 40px 100px 40px;
-          margin-top: -40px;
-        }
-
-        .wix-showcase-img {
-          width: 100%;
-          border-radius: 12px;
-          box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-          border: 1px solid #E5E7EB;
-        }
-
-        /* Features Section */
-        .wix-features {
-          padding: 100px 40px;
-          background: #ffffff;
-          max-width: 1200px;
-          margin: 0 auto;
-        }
-
-        .wix-section-title {
-          font-size: 40px;
-          font-weight: 700;
-          text-align: center;
-          margin-bottom: 60px;
-          letter-spacing: -1px;
-        }
-
-        .wix-grid {
-          display: grid;
-          grid-template-cols: repeat(auto-fit, minmax(300px, 1fr));
-          gap: 40px;
-        }
-
-        .wix-card {
-          padding: 40px;
-          border-radius: 12px;
-          background: #FAFAFA;
-          border: 1px solid #F3F4F6;
-          transition: transform 0.3s, box-shadow 0.3s;
-        }
-
-        .wix-card:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-        }
-
-        .wix-card-icon {
-          width: 50px;
-          height: 50px;
-          background: #EBF3FF;
-          color: #0058FF;
-          border-radius: 10px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-bottom: 24px;
-        }
-
-        .wix-card-title {
-          font-size: 22px;
-          font-weight: 700;
-          margin: 0 0 16px 0;
-        }
-
-        .wix-card-text {
-          font-size: 16px;
-          color: #4B5563;
-          line-height: 1.6;
-          margin: 0;
-        }
-
-        /* Footer */
-        .wix-footer {
-          background: #111111;
-          color: #ffffff;
-          padding: 60px 40px;
-          text-align: center;
-        }
-
-        .wix-footer p {
-          margin: 0;
-          color: #9CA3AF;
-          font-size: 14px;
-        }
-
-        @media (max-width: 768px) {
-          .wix-nav-links { display: none; }
-          .wix-hero-title { font-size: 40px; }
-          .wix-hero { padding-top: 100px; }
-        }
-      `}} />
+    <div className="min-h-screen bg-slate-950 text-slate-50 font-sans selection:bg-blue-500/30">
+      {/* Decorative Background Gradients */}
+      <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-600/20 blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-purple-600/20 blur-[120px]" />
+      </div>
 
       {/* Navigation */}
-      <nav className="wix-nav">
-        <div className="wix-logo">
-          <Layout size={24} color="#0058FF" />
-          Bookin Studio
-        </div>
-        
-        <div className="wix-nav-links">
-          <a href="#creation">Creation</a>
-          <a href="#features">Features</a>
-          <a href="#templates">Templates</a>
-        </div>
+      <nav className="fixed top-0 left-0 right-0 h-20 border-b border-white/10 bg-slate-950/50 backdrop-blur-xl z-50 transition-all duration-300">
+        <div className="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 font-bold text-xl tracking-tight hover:text-blue-400 transition-colors">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+              <Layout size={18} className="text-white" />
+            </div>
+            Bookin Studio
+          </Link>
+          
+          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
+            <a href="#creation" className="hover:text-white transition-colors">Creation</a>
+            <a href="#features" className="hover:text-white transition-colors">Features</a>
+            <a href="#templates" className="hover:text-white transition-colors">Templates</a>
+          </div>
 
-        <div className="wix-nav-actions">
-          <Link href="/login" className="wix-login-btn">Log In</Link>
-          <Link href="/login" className="wix-cta-btn">Get Started</Link>
+          <div className="flex items-center gap-4 text-sm font-medium">
+            <Link href="/login" className="hidden sm:block text-slate-300 hover:text-white transition-colors">
+              Log In
+            </Link>
+            <Link href="/login" className="px-5 py-2.5 rounded-full bg-white text-slate-950 hover:bg-slate-200 hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] active:scale-95">
+              Get Started
+            </Link>
+          </div>
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="wix-hero">
-        <h1 className="wix-hero-title">Create a Website You&apos;re Proud Of</h1>
-        <p className="wix-hero-subtitle">
-          Discover the platform that gives you the freedom to create, design, manage and develop your web presence exactly the way you want.
-        </p>
-        <Link href="/login" className="wix-hero-cta">
-          Get Started <ArrowRight size={20} />
-        </Link>
-        <div className="wix-hero-note">No credit card required</div>
-      </section>
+      <main className="relative z-10 pt-32 pb-20 px-6 sm:pt-40 sm:pb-24 lg:pb-32 max-w-7xl mx-auto">
+        
+        {/* Hero Section */}
+        <section id="creation" className="flex flex-col items-center text-center max-w-4xl mx-auto scroll-mt-32">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold uppercase tracking-wider mb-8 animate-fade-in-up">
+            <Sparkles size={14} /> The Future of Clinic Websites
+          </div>
+          
+          <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight mb-8 leading-[1.1]">
+            Create a Website You're <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">Proud Of</span>
+          </h1>
+          
+          <p className="text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+            Discover the platform that gives you the freedom to create, design, manage and develop your medical presence exactly the way you want.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row items-center gap-4">
+            <Link href="/login" className="flex items-center gap-2 px-8 py-4 rounded-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] hover:scale-105 transition-all active:scale-95 text-lg">
+              Start Building <ArrowRight size={20} />
+            </Link>
+            <span className="text-sm text-slate-500">No credit card required</span>
+          </div>
+        </section>
 
-      {/* Fake UI Showcase */}
-      <section className="wix-showcase">
-        <div style={{ background: '#EBF3FF', borderRadius: '12px', padding: '2px' }}>
-          <div style={{ background: '#fff', borderRadius: '10px', height: '500px', display: 'flex', overflow: 'hidden' }}>
-            {/* Sidebar */}
-            <div style={{ width: '240px', borderRight: '1px solid #E5E7EB', padding: '20px', background: '#FAFAFA' }}>
-              <div style={{ fontWeight: 'bold', marginBottom: '20px' }}>Add Elements</div>
-              <div style={{ display: 'flex', gap: '10px', flexDirection: 'column' }}>
-                <div style={{ background: '#fff', border: '1px solid #E5E7EB', padding: '10px', borderRadius: '6px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{width: '16px', height: '16px', background: '#0058FF', borderRadius: '2px'}}></div>Text</div>
-                <div style={{ background: '#fff', border: '1px solid #E5E7EB', padding: '10px', borderRadius: '6px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{width: '16px', height: '16px', background: '#0058FF', borderRadius: '50%'}}></div>Image</div>
-                <div style={{ background: '#fff', border: '1px solid #E5E7EB', padding: '10px', borderRadius: '6px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}><div style={{width: '16px', height: '16px', background: '#0058FF', borderRadius: '2px'}}></div>Button</div>
+        {/* UI Showcase / Builder Mockup */}
+        <section className="mt-20 sm:mt-32 relative group">
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent z-10 pointer-events-none" />
+          <div className="relative rounded-2xl sm:rounded-[2rem] p-2 bg-gradient-to-b from-white/10 to-white/0 border border-white/10 shadow-2xl overflow-hidden backdrop-blur-sm transition-transform duration-700 hover:scale-[1.02]">
+            
+            {/* Fake Browser Top */}
+            <div className="h-12 bg-slate-900/80 border-b border-white/10 rounded-t-xl sm:rounded-t-[1.75rem] flex items-center px-4 gap-2">
+              <div className="w-3 h-3 rounded-full bg-red-500/80" />
+              <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
+              <div className="w-3 h-3 rounded-full bg-green-500/80" />
+              <div className="mx-auto px-4 py-1.5 rounded-md bg-slate-800/50 text-xs text-slate-400 flex items-center gap-2 w-1/3 min-w-[200px] border border-white/5">
+                <Layout size={12} /> editor.bookin.com
               </div>
             </div>
-            {/* Canvas */}
-            <div style={{ flex: 1, padding: '40px', background: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ width: '80%', height: '60px', background: '#F3F4F6', borderRadius: '8px', marginBottom: '20px' }}></div>
-              <div style={{ width: '60%', height: '40px', background: '#F3F4F6', borderRadius: '8px', marginBottom: '40px' }}></div>
-              <div style={{ width: '120px', height: '40px', background: '#0058FF', borderRadius: '20px' }}></div>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Features */}
-      <section id="features" className="wix-features">
-        <h2 className="wix-section-title">The Freedom to Create Anything</h2>
-        <div className="wix-grid">
-          <div className="wix-card">
-            <div className="wix-card-icon">
-              <Edit3 size={24} />
+            {/* Fake Builder UI */}
+            <div className="bg-slate-900 rounded-b-xl sm:rounded-b-[1.75rem] h-[400px] sm:h-[600px] flex overflow-hidden">
+              {/* Sidebar */}
+              <div className="hidden md:flex w-64 border-r border-white/10 bg-slate-900/50 flex-col p-4">
+                <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4 pl-2">Elements</div>
+                <div className="flex flex-col gap-2">
+                  {['Text Node', 'Image Block', 'Primary Button', 'Service Grid'].map((el, i) => (
+                    <div key={i} className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer text-sm text-slate-300">
+                      <div className="w-6 h-6 rounded bg-blue-500/20 text-blue-400 flex items-center justify-center">
+                        <Layers size={14} />
+                      </div>
+                      {el}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Canvas Area */}
+              <div className="flex-1 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-slate-950/50 p-8 flex flex-col items-center justify-center relative">
+                {/* Canvas Render */}
+                <div className="w-full max-w-2xl h-full bg-white rounded-lg shadow-2xl flex flex-col items-center justify-center p-8 transform transition-transform hover:scale-105 duration-500">
+                  <div className="w-3/4 h-12 bg-slate-100 rounded-lg mb-6" />
+                  <div className="w-1/2 h-6 bg-slate-100 rounded-full mb-10" />
+                  <div className="w-32 h-12 bg-blue-600 rounded-full" />
+                </div>
+                {/* Floating Toolbar */}
+                <div className="absolute bottom-6 bg-slate-800 border border-white/10 rounded-full px-6 py-3 flex gap-6 shadow-xl backdrop-blur-md">
+                  <div className="w-6 h-6 rounded-full bg-white/20 hover:bg-white/40 cursor-pointer transition-colors" />
+                  <div className="w-6 h-6 rounded-full bg-white/20 hover:bg-white/40 cursor-pointer transition-colors" />
+                  <div className="w-6 h-6 rounded-full bg-white/20 hover:bg-white/40 cursor-pointer transition-colors" />
+                </div>
+              </div>
             </div>
-            <h3 className="wix-card-title">Intuitive Drag and Drop</h3>
-            <p className="wix-card-text">
-              Customize your site exactly the way you want with our intuitive drag and drop builder. No coding skills needed.
-            </p>
           </div>
-          <div className="wix-card">
-            <div className="wix-card-icon">
-              <Monitor size={24} />
+        </section>
+
+        {/* Features Section */}
+        <section id="features" className="mt-32 sm:mt-48 scroll-mt-32">
+          <div className="text-center mb-16 sm:mb-24">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6">The Freedom to Create Anything</h2>
+            <p className="text-lg text-slate-400 max-w-2xl mx-auto">Build exactly what you envision with our powerful, intuitive toolset designed for modern clinics.</p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Feature 1 */}
+            <div className="group p-8 rounded-3xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:shadow-[0_0_40px_rgba(59,130,246,0.1)] hover:-translate-y-2">
+              <div className="w-14 h-14 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <Edit3 size={28} />
+              </div>
+              <h3 className="text-2xl font-bold mb-4">Intuitive Drag & Drop</h3>
+              <p className="text-slate-400 leading-relaxed">
+                Customize your site exactly the way you want with our visual builder. Absolutely no coding skills required to achieve a premium look.
+              </p>
             </div>
-            <h3 className="wix-card-title">Responsive Design</h3>
-            <p className="wix-card-text">
-              Your website will look amazing on any device. Switch to mobile editor to personalize it further.
-            </p>
-          </div>
-          <div className="wix-card">
-            <div className="wix-card-icon">
-              <Rocket size={24} />
+
+            {/* Feature 2 */}
+            <div className="group p-8 rounded-3xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:shadow-[0_0_40px_rgba(59,130,246,0.1)] hover:-translate-y-2">
+              <div className="w-14 h-14 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <Monitor size={28} />
+              </div>
+              <h3 className="text-2xl font-bold mb-4">Responsive by Default</h3>
+              <p className="text-slate-400 leading-relaxed">
+                Your website will look amazing on any device instantly. Switch to our mobile editor to fine-tune the mobile experience further.
+              </p>
             </div>
-            <h3 className="wix-card-title">Lightning Fast Hosting</h3>
-            <p className="wix-card-text">
-              Benefit from our reliable, scalable, and free hosting. Your site will load in an instant.
-            </p>
+
+            {/* Feature 3 */}
+            <div className="group p-8 rounded-3xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:shadow-[0_0_40px_rgba(59,130,246,0.1)] hover:-translate-y-2">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <Zap size={28} />
+              </div>
+              <h3 className="text-2xl font-bold mb-4">Lightning Fast</h3>
+              <p className="text-slate-400 leading-relaxed">
+                Benefit from our globally distributed edge infrastructure. Your site will load in an instant, keeping your bounce rates incredibly low.
+              </p>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+
+        {/* Templates Section (Added to fix the anchor link) */}
+        <section id="templates" className="mt-32 sm:mt-48 py-20 border-t border-white/10 scroll-mt-32">
+          <div className="flex flex-col lg:flex-row items-center gap-16">
+            <div className="flex-1 text-center lg:text-left">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6">Start from 500+ Designer Templates</h2>
+              <p className="text-lg text-slate-400 mb-8 max-w-xl mx-auto lg:mx-0">
+                Don't want to start from scratch? Choose a template tailored for your specific medical practice, customize it with your brand, and go live in hours instead of weeks.
+              </p>
+              <ul className="flex flex-col gap-4 text-slate-300 text-lg mb-10 max-w-md mx-auto lg:mx-0 text-left">
+                <li className="flex items-center gap-3"><Check className="text-emerald-400" size={24} /> Optimized for high conversion rates</li>
+                <li className="flex items-center gap-3"><Check className="text-emerald-400" size={24} /> Built-in SEO best practices</li>
+                <li className="flex items-center gap-3"><Check className="text-emerald-400" size={24} /> Automated appointment booking ready</li>
+              </ul>
+              <Link href="/login" className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-white text-slate-950 font-semibold hover:bg-slate-200 hover:scale-105 transition-all text-lg">
+                Explore Templates
+              </Link>
+            </div>
+            
+            <div className="flex-1 relative w-full aspect-square max-w-lg">
+               {/* Abstract visual for templates */}
+               <div className="absolute inset-0 grid grid-cols-2 gap-4 transform rotate-6 hover:rotate-0 transition-transform duration-700">
+                  <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/40 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-sm animate-pulse" style={{ animationDelay: '0s', animationDuration: '3s' }} />
+                  <div className="bg-gradient-to-bl from-purple-500/20 to-pink-600/40 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-sm mt-8 animate-pulse" style={{ animationDelay: '1s', animationDuration: '3s' }} />
+                  <div className="bg-gradient-to-tr from-emerald-500/20 to-teal-600/40 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-sm -mt-8 animate-pulse" style={{ animationDelay: '2s', animationDuration: '3s' }} />
+                  <div className="bg-gradient-to-tl from-orange-500/20 to-red-600/40 rounded-2xl border border-white/10 shadow-2xl backdrop-blur-sm animate-pulse" style={{ animationDelay: '1.5s', animationDuration: '3s' }} />
+               </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
 
       {/* Footer */}
-      <footer className="wix-footer">
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-          <Layout size={20} color="#0058FF" />
-          <span style={{ fontSize: '20px', fontWeight: 'bold' }}>Bookin Studio</span>
+      <footer className="relative z-10 border-t border-white/10 bg-slate-950 pt-16 pb-8 px-6">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-2 font-bold text-xl">
+             <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center">
+              <Layout size={14} className="text-white" />
+            </div>
+            Bookin Studio
+          </div>
+          <p className="text-slate-500 text-sm">
+            © {new Date().getFullYear()} Bookin Inc. The modern experience for clinics.
+          </p>
         </div>
-        <p>© {new Date().getFullYear()} Bookin Inc. The Wix-style experience for clinics.</p>
       </footer>
     </div>
   );

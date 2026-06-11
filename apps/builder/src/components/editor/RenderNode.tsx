@@ -19,23 +19,22 @@ const SelectionOverlay = ({ dom, name, id }: { dom: HTMLElement, name: string, i
     window.addEventListener("scroll", updateRect, true);
     window.addEventListener("resize", updateRect);
     
-    // MutationObserver to track size changes
-    const observer = new MutationObserver(updateRect);
-    observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+    // Track size changes
+    const resizeObserver = new ResizeObserver(updateRect);
+    resizeObserver.observe(dom);
     
-    // Animation frame for smooth drag tracking
-    let frame: number;
-    const loop = () => {
-      updateRect();
-      frame = requestAnimationFrame(loop);
-    };
-    frame = requestAnimationFrame(loop);
+    // Track position changes via mutations within the canvas only
+    const canvasContainer = dom.closest('.builder-canvas-wrapper') || dom.parentElement;
+    const mutationObserver = new MutationObserver(updateRect);
+    if (canvasContainer) {
+      mutationObserver.observe(canvasContainer, { childList: true, subtree: true, attributes: true });
+    }
 
     return () => {
       window.removeEventListener("scroll", updateRect, true);
       window.removeEventListener("resize", updateRect);
-      observer.disconnect();
-      cancelAnimationFrame(frame);
+      resizeObserver.disconnect();
+      mutationObserver.disconnect();
     };
   }, [updateRect]);
 
@@ -128,8 +127,85 @@ export const RenderNode = ({ render }: { render: React.ReactNode }) => {
       } else {
          prevHoverRef.current = "";
       }
+
+      // Handle Breakpoint Visibility Classes
+      dom.classList.toggle('hide-desktop', !!props.hiddenBreakpoints?.desktop);
+      dom.classList.toggle('hide-tablet', !!props.hiddenBreakpoints?.tablet);
+      dom.classList.toggle('hide-mobile', !!props.hiddenBreakpoints?.mobile);
+
+      // Handle Scroll Animations
+      if (props.animation?.scroll?.type) {
+        dom.style.setProperty('--animate-duration', `${props.animation.scroll.duration}ms`);
+        dom.style.setProperty('--animate-delay', `${props.animation.scroll.delay}ms`);
+        dom.classList.add('scroll-animate', `animate-type-${props.animation.scroll.type}`);
+        
+        // Only run observer if not active (to prevent jumping while selecting)
+        if (!isActive) {
+          const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+              if (entry.isIntersecting) {
+                dom.classList.add('is-visible');
+              } else {
+                // Optional: remove class to repeat animation on scroll up
+                // dom.classList.remove('is-visible'); 
+              }
+            });
+          }, { threshold: 0.1 });
+          observer.observe(dom);
+          
+          return () => {
+            observer.disconnect();
+          };
+        } else {
+           dom.classList.add('is-visible'); // always visible when selected
+        }
+      } else {
+        dom.classList.remove('scroll-animate', 'is-visible');
+        ['fade-in', 'slide-up', 'slide-left', 'slide-right', 'zoom-in'].forEach(t => dom.classList.remove(`animate-type-${t}`));
+      }
+
+      // Handle Shift-Click Multi-Select and Cmd-Click Deep Select
+      const handleClick = (e: MouseEvent) => {
+        if (e.shiftKey) {
+          e.stopPropagation();
+          e.preventDefault();
+          const currentSelection = Array.from(query.getState().events.selected);
+          if (currentSelection.includes(id)) {
+            // Remove from selection
+            const nextSelection = currentSelection.filter(n => n !== id);
+            if (nextSelection.length > 0) {
+              actions.selectNode(nextSelection);
+            } else {
+              actions.clearEvents();
+            }
+          } else {
+            // Add to selection
+            actions.selectNode([...currentSelection, id]);
+          }
+        } else if (e.metaKey || e.ctrlKey) {
+          // Deep select: stop propagation so parent doesn't override
+          e.stopPropagation();
+          actions.selectNode(id);
+        }
+      };
+
+      const handleContextMenu = (e: MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        actions.selectNode(id);
+        window.dispatchEvent(new CustomEvent('openContextMenu', { 
+          detail: { x: e.clientX, y: e.clientY, id } 
+        }));
+      };
+
+      dom.addEventListener('click', handleClick, { capture: true });
+      dom.addEventListener('contextmenu', handleContextMenu, { capture: true });
+      return () => {
+        dom.removeEventListener('click', handleClick, { capture: true });
+        dom.removeEventListener('contextmenu', handleContextMenu, { capture: true });
+      };
     }
-  }, [dom, hoverEffect]);
+  }, [dom, hoverEffect, props.hiddenBreakpoints, id, actions, query]);
 
   // If this is the Root node (the main Canvas), do not wrap it in Rnd.
   // Also, if the element doesn't opt-in to absolute positioning yet (Phase 3 transition), 
@@ -156,14 +232,24 @@ export const RenderNode = ({ render }: { render: React.ReactNode }) => {
           });
         }}
         bounds="parent"
-        className={isActive ? "ring-2 ring-blue-500 z-50" : "hover:ring-1 hover:ring-blue-300 z-10"}
+        className={isActive ? "ring-[1.5px] ring-[#0D99FF] z-50 shadow-[0_0_0_1px_rgba(13,153,255,0.2)]" : "hover:ring-1 hover:ring-[#0D99FF]/50 z-10"}
         style={{ position: 'absolute' }}
         enableResizing={isActive} // Only show resize handles when selected
         disableDragging={!isActive} // Only drag when selected, to allow interacting with children
+        resizeHandleStyles={{
+          topLeft: { width: '8px', height: '8px', background: 'white', border: '1.5px solid #0D99FF', borderRadius: '1px', left: '-4px', top: '-4px' },
+          topRight: { width: '8px', height: '8px', background: 'white', border: '1.5px solid #0D99FF', borderRadius: '1px', right: '-4px', top: '-4px' },
+          bottomLeft: { width: '8px', height: '8px', background: 'white', border: '1.5px solid #0D99FF', borderRadius: '1px', left: '-4px', bottom: '-4px' },
+          bottomRight: { width: '8px', height: '8px', background: 'white', border: '1.5px solid #0D99FF', borderRadius: '1px', right: '-4px', bottom: '-4px' },
+          top: { height: '8px', top: '-4px', cursor: 'ns-resize' },
+          bottom: { height: '8px', bottom: '-4px', cursor: 'ns-resize' },
+          left: { width: '8px', left: '-4px', cursor: 'ew-resize' },
+          right: { width: '8px', right: '-4px', cursor: 'ew-resize' }
+        }}
       >
         {render}
         {isActive && dom && (
-           <div className="absolute -top-6 -left-0.5 bg-blue-500 text-white text-[10px] font-bold px-2 py-1 rounded-t-md whitespace-nowrap shadow-sm pointer-events-auto">
+           <div className="absolute -top-6 -left-0.5 bg-[#0D99FF] text-white text-[10px] font-bold px-2 py-1 rounded-t-sm whitespace-nowrap shadow-sm pointer-events-auto">
              {name}
            </div>
         )}

@@ -42,6 +42,8 @@ export const KeyboardShortcutsOverlay = () => {
       { keys: ["Ctrl", "C"], description: "Copy component" },
       { keys: ["Ctrl", "X"], description: "Cut component" },
       { keys: ["Ctrl", "V"], description: "Paste component" },
+      { keys: ["Ctrl", "Alt", "C"], description: "Copy Styles" },
+      { keys: ["Ctrl", "Alt", "V"], description: "Paste Styles" },
       { keys: ["Ctrl", "D"], description: "Duplicate component" },
       { keys: ["Ctrl", "A"], description: "Select all" },
       { keys: ["Delete"], description: "Delete component" },

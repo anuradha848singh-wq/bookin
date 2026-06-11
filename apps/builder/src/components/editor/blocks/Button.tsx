@@ -16,16 +16,24 @@ interface ButtonProps {
   y?: number;
   width?: string | number;
   height?: string | number;
+  fontFamily?: string;
+  hiddenBreakpoints?: { desktop: boolean, tablet: boolean, mobile: boolean };
+  actionType?: "none" | "link" | "modal";
+  linkUrl?: string;
+  modalId?: string;
 }
 
 export const ButtonSettings = () => {
-  const { actions: { setProp }, background, color, borderRadius, fontSize, paddingX, paddingY } = useNode((node) => ({
+  const { actions: { setProp }, background, color, borderRadius, fontSize, paddingX, paddingY, actionType, linkUrl, modalId } = useNode((node) => ({
     background: node.data.props.background,
     color: node.data.props.color,
     borderRadius: node.data.props.borderRadius,
     fontSize: node.data.props.fontSize,
     paddingX: node.data.props.paddingX,
     paddingY: node.data.props.paddingY,
+    actionType: node.data.props.actionType,
+    linkUrl: node.data.props.linkUrl,
+    modalId: node.data.props.modalId,
   }));
 
   return (
@@ -99,6 +107,43 @@ export const ButtonSettings = () => {
           </div>
         </div>
       </div>
+
+      {/* Button Actions */}
+      <div className="flex flex-col gap-2 mt-3">
+        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Button Action</label>
+        
+        <div className="flex flex-col gap-2.5">
+          <select 
+            value={actionType || "none"} 
+            onChange={(e) => setProp((p: ButtonProps) => { p.actionType = e.target.value as "none" | "link" | "modal"; })} 
+            className="w-full bg-slate-900 border border-slate-800 rounded-md py-1.5 px-2.5 text-[11px] text-slate-200 focus:outline-none"
+          >
+            <option value="none">No Action</option>
+            <option value="link">Open URL Link</option>
+            <option value="modal">Open Modal</option>
+          </select>
+
+          {actionType === "link" && (
+            <input 
+              type="text" 
+              placeholder="https://..." 
+              value={linkUrl || ""} 
+              onChange={(e) => setProp((p: ButtonProps) => { p.linkUrl = e.target.value; })} 
+              className="w-full bg-slate-900 border border-slate-800 rounded-md py-1.5 px-2.5 text-[11px] text-slate-200 focus:outline-none"
+            />
+          )}
+
+          {actionType === "modal" && (
+            <input 
+              type="text" 
+              placeholder="Modal ID (e.g. my-modal)" 
+              value={modalId || ""} 
+              onChange={(e) => setProp((p: ButtonProps) => { p.modalId = e.target.value; })} 
+              className="w-full bg-slate-900 border border-slate-800 rounded-md py-1.5 px-2.5 text-[11px] text-slate-200 focus:outline-none"
+            />
+          )}
+        </div>
+      </div>
     </div>
   );
 };
@@ -115,12 +160,20 @@ export const Button = ({
   x = 0,
   y = 0,
   width = "auto",
-  height = "auto"
+  height = "auto",
+  fontFamily = "Inter, sans-serif",
+  hiddenBreakpoints = { desktop: false, tablet: false, mobile: false },
+  actionType = "none",
+  linkUrl = "",
+  modalId = ""
 }: ButtonProps) => {
-  const { connectors: { connect, drag }, isSelected, actions: { setProp } } = useNode((state) => ({
+  const { id, connectors: { connect, drag }, isSelected, actions: { setProp } } = useNode((state) => ({
     isSelected: state.events.selected,
   }));
-  const { enabled } = useEditor((state) => ({ enabled: state.options.enabled }));
+  const { enabled, mode } = useEditor((state) => ({ 
+    enabled: state.options.enabled,
+    mode: state.options.enabled ? "desktop" : "desktop" // simplified for context
+  }));
   
   const [editable, setEditable] = useState(false);
   const textRef = useRef<HTMLDivElement>(null);
@@ -133,10 +186,23 @@ export const Button = ({
 
   return (
     <div
+      data-node-id={id}
       ref={(ref) => { connect(drag(ref as HTMLElement)); }}
-      onClick={() => { if (isSelected) setEditable(true); }}
+      className={`builder-button text-center flex items-center justify-center font-bold ${hiddenBreakpoints?.[mode as keyof typeof hiddenBreakpoints] ? 'hidden-breakpoint' : ''}`}
+      onClick={(e) => {
+        if (!enabled) { // If published
+          if (actionType === "link" && linkUrl) {
+            window.location.href = linkUrl;
+          } else if (actionType === "modal" && modalId) {
+            e.preventDefault();
+            document.dispatchEvent(new CustomEvent('open-modal', { detail: { id: modalId } }));
+          }
+        } else {
+          if (isSelected) setEditable(true);
+        }
+      }}
       style={{ 
-        background, 
+        background: background as string, 
         color, 
         borderRadius: `${borderRadius}px`, 
         fontSize: `${fontSize}px`, 
@@ -190,7 +256,12 @@ Button.craft = {
     x: 0,
     y: 0,
     width: "auto",
-    height: "auto"
+    height: "auto",
+    fontFamily: "Inter, sans-serif",
+    hiddenBreakpoints: { desktop: false, tablet: false, mobile: false },
+    actionType: "none",
+    linkUrl: "",
+    modalId: ""
   },
   related: { settings: ButtonSettings },
 };

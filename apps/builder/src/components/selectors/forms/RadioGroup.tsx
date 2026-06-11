@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import { useNode } from "@craftjs/core";
+import { Circle, Dot } from "lucide-react";
+import { useFormLogic } from "./FormLogicContext";
 
 interface RadioOption {
   id: string;
@@ -16,6 +18,9 @@ interface RadioGroupProps {
   layout?: "vertical" | "horizontal" | "cards";
   primaryColor?: string;
   borderRadius?: number;
+  fieldId?: string;
+  conditionalRules?: any[];
+  conditionalLogic?: "AND" | "OR";
 }
 
 export const RadioGroupSettings = () => {
@@ -123,7 +128,8 @@ export const RadioGroup = ({
   required = true,
   layout = "vertical",
   primaryColor = "#0066FF",
-  borderRadius = 8
+  borderRadius = 8,
+  ...props
 }: RadioGroupProps) => {
   const { connectors: { connect, drag }, isSelected, isHovered } = useNode((state) => ({
     isSelected: state.events.selected,
@@ -131,21 +137,30 @@ export const RadioGroup = ({
   }));
 
   const [selectedValue, setSelectedValue] = useState<string | null>(null);
+  const { setValue, evaluateRules } = useFormLogic();
+  const isVisible = evaluateRules(props.conditionalRules, props.conditionalLogic);
 
   const handleSelect = (val: string) => {
-    if (isSelected) return;
     setSelectedValue(val);
+    if (props.fieldId) {
+      setValue(props.fieldId, val);
+    }
   };
 
   return (
     <div
       ref={(ref) => { connect(drag(ref as HTMLElement)); }}
-      className="w-full relative flex flex-col gap-3"
+      className={`w-full relative flex flex-col gap-2 transition-all duration-300 ${!isVisible ? "opacity-40 grayscale" : ""}`}
       style={{ 
         outline: isSelected ? "2px solid #0066FF" : isHovered ? "1px solid #3b82f6" : "none", 
         outlineOffset: "4px", 
       }}
     >
+      {!isVisible && (
+        <div className="absolute -top-3 -right-2 bg-amber-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full z-10 shadow shadow-black/20">
+          Hidden by Logic
+        </div>
+      )}
       {label && (
         <label className="block text-sm font-semibold text-gray-800">
           {label} {required && <span className="text-red-500">*</span>}
