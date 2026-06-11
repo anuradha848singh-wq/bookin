@@ -7,6 +7,7 @@ import { Rail } from "./Rail";
 import { LeftPanel } from "./LeftPanel";
 import { SettingsPanel } from "./SettingsPanel";
 import { RenderNode } from "./RenderNode";
+import { BottomToolbar } from "./BottomToolbar";
 import { Container } from "./blocks/Container";
 import { Text } from "./blocks/Text";
 import { Button } from "./blocks/Button";
@@ -116,7 +117,7 @@ export const Editor = ({ initialData, onSave, onLoad, activeSlug, onPageSwitch }
   }, [initialData]);
 
   return (
-    <div className="h-full w-full flex flex-col overflow-hidden bg-[#F9FAFB] text-gray-900 font-sans">
+    <div className="h-full w-full flex flex-col overflow-hidden">
       <CraftEditor 
         resolver={{ 
           Container, Text, Button, HeroSection, ServicesGrid, 
@@ -150,17 +151,17 @@ export const Editor = ({ initialData, onSave, onLoad, activeSlug, onPageSwitch }
           {!previewMode && <Rail activeTab={activeTab} setActiveTab={setActiveTab} />}
           {!previewMode && <LeftPanel activeTab={activeTab} activeSlug={activeSlug} onPageSwitch={onPageSwitch} />}
 
-          <div className="flex-1 flex flex-col overflow-hidden relative bg-[#F1F5F9]">
-            <div className="flex-1 overflow-auto flex justify-center pt-8 pb-32 px-6 bg-[radial-gradient(#e5e7eb_1.2px,transparent_1.2px)] [background-size:20px_20px]">
+          <div className="flex-1 flex flex-col overflow-hidden relative builder-canvas-wrapper">
+            <div className="flex-1 overflow-auto flex justify-center pt-8 pb-32 px-6">
               <div 
-                className="flex flex-col bg-white shadow-lg border border-gray-200/40 rounded-xl transition-all duration-300 origin-top mx-auto"
+                className="flex flex-col bg-[#111827] shadow-2xl transition-all duration-300 origin-top mx-auto builder-canvas-frame"
                 style={{
                   width: deviceMode === "mobile" ? "375px" : "100%",
                   maxWidth: deviceMode === "mobile" ? "375px" : "1200px",
                   minHeight: "800px",
                 }}
               >
-                <div className="flex-1 w-full bg-white relative rounded-xl overflow-hidden">
+                <div className="flex-1 w-full relative overflow-hidden bg-white">
                   <Frame data={data || undefined}>
                     <Element is={Container} padding={60} background="#ffffff" canvas>
                       <Text text="Welcome to Bookin Builder" fontSize={48} fontWeight="700" textAlign="center" color="#111827" />
@@ -171,6 +172,8 @@ export const Editor = ({ initialData, onSave, onLoad, activeSlug, onPageSwitch }
                 </div>
               </div>
             </div>
+            
+            {!previewMode && <BottomToolbar saveStatus={saveStatus} />}
           </div>
 
           {!previewMode && <SettingsPanel />}

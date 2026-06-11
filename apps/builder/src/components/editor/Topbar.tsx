@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useEditor } from "@craftjs/core";
-import { ChevronDown, Monitor, Tablet, Smartphone, Undo2, Redo2, Loader2, Check, Upload, HelpCircle, Eye, EyeOff, AlertCircle, Cloud, Search, Activity, Gauge, Palette, Code2, Database, ShoppingBag, Users } from "lucide-react";
+import { ChevronDown, Monitor, Tablet, Smartphone, Undo2, Redo2, Loader2, Check, Upload, HelpCircle, Eye, EyeOff, AlertCircle, Cloud, Search, Activity, Gauge, Palette, Code2, Database, ShoppingBag, Users, Zap } from "lucide-react";
 import { SEOAnalyzer } from "./SEOAnalyzer";
 import { AnalyticsSettings } from "./AnalyticsSettings";
 import { PerformanceMonitor } from "./PerformanceMonitor";
@@ -77,31 +77,54 @@ export const Topbar = ({
   };
 
   const saveLabel = {
-    saved: "Autosaved",
-    saving: "Saving...",
-    unsaved: "Unsaved changes",
-    error: "Save failed",
+    saved: "Saved",
+    saving: "Saving",
+    unsaved: "Unsaved",
+    error: "Error",
   }[saveStatus];
-
-  const SaveIcon = saveStatus === "error" ? AlertCircle : saveStatus === "saved" ? Check : Cloud;
 
   return (
     <>
       <div className="builder-topbar">
       <div className="builder-topbar-left">
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <span className="builder-logo">Bookin</span>
+        <div className="builder-logo">
+          <div className="builder-logo-icon"><Zap size={14} fill="currentColor" /></div>
+          Bookin
         </div>
 
         <button type="button" onClick={onOpenPages} className="builder-page-switcher">
-          <span style={{ fontSize: "13px", fontWeight: 500, color: "#6b7280" }}>Page:</span>
-          <span style={{ fontSize: "13px", fontWeight: 700, color: "#111827", textTransform: "capitalize" }}>{activeSlug}</span>
-          <ChevronDown size={14} style={{ color: "#9ca3af", marginLeft: "4px" }} />
+          <span className="text-gray-400">Page:</span>
+          <span className="capitalize text-white">{activeSlug}</span>
+          <ChevronDown size={14} className="text-gray-500" />
         </button>
       </div>
 
       <div className="builder-topbar-center">
-        <div className="builder-history-controls">
+        <div className="builder-device-controls flex items-center gap-1 bg-[#1A1A1E] border border-[#2C2D33] p-1 rounded-lg">
+          <button
+            type="button"
+            onClick={() => setDeviceMode("desktop")}
+            className={`builder-icon-button ${deviceMode === "desktop" ? "active" : ""}`}
+            title="Desktop"
+          >
+            <Monitor size={15} />
+          </button>
+          <button type="button" className="builder-icon-button" disabled title="Tablet preview coming soon">
+            <Tablet size={15} />
+          </button>
+          <button
+            type="button"
+            onClick={() => setDeviceMode("mobile")}
+            className={`builder-icon-button ${deviceMode === "mobile" ? "active" : ""}`}
+            title="Mobile"
+          >
+            <Smartphone size={15} />
+          </button>
+        </div>
+
+        <div className="builder-topbar-divider" />
+
+        <div className="flex items-center gap-1 bg-[#1A1A1E] border border-[#2C2D33] p-1 rounded-lg">
           <button
             type="button"
             onClick={() => actions.history.undo()}
@@ -109,7 +132,7 @@ export const Topbar = ({
             className="builder-icon-button"
             title="Undo"
           >
-            <Undo2 size={15} strokeWidth={2.2} />
+            <Undo2 size={15} />
           </button>
           <button
             type="button"
@@ -118,137 +141,53 @@ export const Topbar = ({
             className="builder-icon-button"
             title="Redo"
           >
-            <Redo2 size={15} strokeWidth={2.2} />
-          </button>
-        </div>
-
-        <div className="builder-topbar-divider" />
-
-        <div className="builder-device-controls">
-          <button
-            type="button"
-            onClick={() => setDeviceMode("desktop")}
-            className={`builder-icon-button ${deviceMode === "desktop" ? "active" : ""}`}
-            title="Desktop"
-          >
-            <Monitor size={15} strokeWidth={2.2} />
-          </button>
-          <button type="button" className="builder-icon-button" disabled title="Tablet preview coming soon">
-            <Tablet size={15} strokeWidth={2.2} />
-          </button>
-          <button
-            type="button"
-            onClick={() => setDeviceMode("mobile")}
-            className={`builder-icon-button ${deviceMode === "mobile" ? "active" : ""}`}
-            title="Mobile"
-          >
-            <Smartphone size={15} strokeWidth={2} />
+            <Redo2 size={15} />
           </button>
         </div>
 
         <div className="builder-topbar-divider" />
 
         <div className={`builder-save-state builder-save-state-${saveStatus}`}>
+          <div className="builder-save-state-dot"></div>
           <span>{saveLabel}</span>
-          {saveStatus === "saving" ? <Loader2 size={13} className="animate-spin" /> : <SaveIcon size={13} strokeWidth={3} />}
         </div>
       </div>
 
       <div className="builder-topbar-right">
-        <button
-          type="button"
-          onClick={() => setShowMembers(true)}
-          className="builder-preview-button"
-          style={{ background: "#f3f4f6", color: "#111827", border: "1px solid #e5e7eb" }}
-        >
+        <button type="button" onClick={() => setShowMembers(true)} className="builder-btn-secondary" title="Members">
           <Users size={14} />
-          <span>Members</span>
         </button>
-        <button
-          type="button"
-          onClick={() => setShowStore(true)}
-          className="builder-preview-button"
-          style={{ background: "#f3f4f6", color: "#111827", border: "1px solid #e5e7eb" }}
-        >
+        <button type="button" onClick={() => setShowStore(true)} className="builder-btn-secondary" title="Store">
           <ShoppingBag size={14} />
-          <span>Store</span>
         </button>
-        <button
-          type="button"
-          onClick={() => setShowCMS(true)}
-          className="builder-preview-button"
-          style={{ background: "#f3f4f6", color: "#111827", border: "1px solid #e5e7eb" }}
-        >
-          <Database size={14} />
-          <span>CMS</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setShowCode(true)}
-          className="builder-preview-button"
-          style={{ background: "#f3f4f6", color: "#111827", border: "1px solid #e5e7eb" }}
-        >
+        <button type="button" onClick={() => setShowCode(true)} className="builder-btn-secondary" title="Code Editor">
           <Code2 size={14} />
-          <span>Code</span>
         </button>
-        <button
-          type="button"
-          onClick={() => setShowPerformance(true)}
-          className="builder-preview-button"
-          style={{ background: "#f3f4f6", color: "#111827", border: "1px solid #e5e7eb" }}
-        >
+        <button type="button" onClick={() => setShowPerformance(true)} className="builder-btn-secondary" title="Performance">
           <Gauge size={14} />
-          <span>Performance</span>
         </button>
-        <button
-          type="button"
-          onClick={() => setShowTheme(true)}
-          className="builder-preview-button"
-          style={{ background: "#f3f4f6", color: "#111827", border: "1px solid #e5e7eb" }}
-        >
-          <Palette size={14} />
-          <span>Theme</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setShowAnalytics(true)}
-          className="builder-preview-button"
-          style={{ background: "#f3f4f6", color: "#111827", border: "1px solid #e5e7eb" }}
-        >
-          <Activity size={14} />
-          <span>Analytics</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setShowSEO(true)}
-          className="builder-preview-button"
-          style={{ background: "#f3f4f6", color: "#111827", border: "1px solid #e5e7eb" }}
-        >
-          <Search size={14} />
-          <span>SEO Check</span>
-        </button>
+        
         <button
           type="button"
           onClick={() => setPreviewMode(!previewMode)}
-          className="builder-preview-button"
+          className="builder-btn-secondary"
         >
           {previewMode ? <EyeOff size={14} /> : <Eye size={14} />}
-          <span>{previewMode ? "Back to edit" : "Preview"}</span>
+          <span>{previewMode ? "Edit" : "Preview"}</span>
         </button>
+        
         <button
           type="button"
           onClick={handlePublish}
           disabled={isPublishing}
-          className="builder-publish-button"
+          className="builder-btn-primary"
         >
-          {isPublishing ? <Loader2 size={15} className="animate-spin" /> : <Upload size={14} strokeWidth={2.5} />}
+          {isPublishing ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
           <span>{isPublishing ? "Publishing..." : "Publish"}</span>
-        </button>
-        <button type="button" className="builder-help-button" title="Builder help">
-          <HelpCircle size={18} />
         </button>
       </div>
     </div>
+    
     {showSEO && <SEOAnalyzer onClose={() => setShowSEO(false)} />}
     {showAnalytics && <AnalyticsSettings onClose={() => setShowAnalytics(false)} />}
     {showPerformance && <PerformanceMonitor onClose={() => setShowPerformance(false)} />}
