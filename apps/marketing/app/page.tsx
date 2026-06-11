@@ -239,7 +239,7 @@ const Hero = () => (
       </p>
 
       <div className="bk-hero-btns">
-        <a href="http://localhost:3002/login" className="bk-btn-red" style={{ padding: "11px 22px", fontSize: 15 }}>
+        <a href={process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL}/login` : "http://localhost:3002/login"} className="bk-btn-red" style={{ padding: "11px 22px", fontSize: 15 }}>
           Start Free Trial <Arr />
         </a>
         <Link href="/pricing" className="bk-btn-outline" style={{ padding: "11px 22px", fontSize: 15 }}>
@@ -575,7 +575,7 @@ const BookingSection = () => (
               <span style={{ fontSize: 15, color: T.body, fontWeight: 500 }}>{item}</span>
             </div>
           ))}
-          <a href="http://localhost:3002/login" className="bk-btn-red" style={{ marginTop: 28, padding: "12px 22px", fontSize: 14.5 }}>
+          <a href={process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL}/login` : "http://localhost:3002/login"} className="bk-btn-red" style={{ marginTop: 28, padding: "12px 22px", fontSize: 14.5 }}>
             View Booking Page Demo <Arr />
           </a>
           {/* Calendar illustration */}
@@ -731,7 +731,7 @@ const CTABanner = () => (
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start" }}>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-          <a href="http://localhost:3002/login" className="bk-btn-outline" style={{ background: "#fff", color: T.red, border: "none", padding: "13px 24px", fontSize: 14.5, fontWeight: 700 }}>
+          <a href={process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL}/login` : "http://localhost:3002/login"} className="bk-btn-outline" style={{ background: "#fff", color: T.red, border: "none", padding: "13px 24px", fontSize: 14.5, fontWeight: 700 }}>
             Start Free Trial <Arr color={T.red} />
           </a>
           <button className="bk-btn-outline" style={{ background: "transparent", color: "#fff", border: "1.5px solid rgba(255,255,255,0.4)", padding: "13px 24px", fontSize: 14.5 }}>
