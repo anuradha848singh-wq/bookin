@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { T } from "../theme";
+import { getLoginUrl } from "../utils/env";
 
 export default function PricingPage() {
   const [annual, setAnnual] = useState(false);
@@ -133,7 +134,7 @@ export default function PricingPage() {
               </div>
 
               {/* Action Button */}
-              <a href={process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL}/login` : "http://localhost:3002/login"} className="bk-btn-red" style={{ width: "100%", padding: "12px 0", textAlign: "center", justifyContent: "center", display: "flex", background: p.recommended ? T.red : T.dark, marginBottom: 32 }}>
+              <a href={getLoginUrl()} className="bk-btn-red" style={{ width: "100%", padding: "12px 0", textAlign: "center", justifyContent: "center", display: "flex", background: p.recommended ? T.red : T.dark, marginBottom: 32 }}>
                 Get Started with {p.name}
               </a>
 

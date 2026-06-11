@@ -8,12 +8,15 @@ interface ImageProps {
   src?: string;
   alt?: string;
   borderRadius?: number;
-  width?: string;
-  height?: string;
+  width?: string | number;
+  height?: string | number;
   padding?: number;
   shadow?: string;
   lazyLoad?: boolean;
   optimizeFormat?: boolean;
+  position?: string;
+  x?: number;
+  y?: number;
 }
 
 export const ImageSettings = () => {
@@ -168,7 +171,10 @@ export const Image = ({
   padding = 0,
   shadow = "none",
   lazyLoad = true,
-  optimizeFormat = true
+  optimizeFormat = true,
+  position = "relative",
+  x = 0,
+  y = 0
 }: ImageProps) => {
   const { connectors: { connect, drag }, isSelected, actions: { setProp } } = useNode((state) => ({
     isSelected: state.events.selected,
@@ -183,13 +189,10 @@ export const Image = ({
     const observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
         if (entry.contentBoxSize) {
-          // If resizing is happening via CSS resize handle, update the props
-          // We debounce or update only on mouseup if possible, but ResizeObserver runs smoothly
           setProp((p: ImageProps) => {
-            // Only update if it actually changed to prevent loop
             p.width = `${entry.borderBoxSize[0].inlineSize}px`;
             p.height = `${entry.borderBoxSize[0].blockSize}px`;
-          }, 500); // 500ms debounce
+          }, 500);
         }
       }
     });
@@ -205,9 +208,9 @@ export const Image = ({
         connect(drag(ref as HTMLElement)); 
       }}
       style={{ 
-        padding: `${padding}px`, 
-        width,
-        height,
+        padding: position === "absolute" ? 0 : `${padding}px`, 
+        width: position === "absolute" ? "100%" : width,
+        height: position === "absolute" ? "100%" : height,
         boxSizing: "border-box",
         outline: isSelected ? "2px solid #0066FF" : "none", 
         outlineOffset: "2px", 
@@ -216,10 +219,9 @@ export const Image = ({
         alignItems: "center",
         resize: isSelected ? "both" : "none",
         overflow: isSelected ? "hidden" : "visible",
-        position: "relative",
       }}
     >
-      {isSelected && (
+      {isSelected && position !== "absolute" && (
         <div className="absolute bottom-0 right-0 w-4 h-4 bg-blue-500 rounded-tl-lg pointer-events-none z-10 flex items-center justify-center">
            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="21 15 21 21 15 21" /><line x1="21" y1="21" x2="15" y2="15" /></svg>
         </div>
@@ -243,7 +245,8 @@ export const Image = ({
           style={{ 
             borderRadius: `${borderRadius}px`, 
             width: "100%",
-            height: "150px",
+            height: position === "absolute" ? "100%" : "150px",
+            minHeight: "150px",
             background: "#F3F4F6",
             border: "2px dashed #D1D5DB",
             display: "flex",
@@ -272,7 +275,10 @@ Image.craft = {
     padding: 0,
     shadow: "none",
     lazyLoad: true,
-    optimizeFormat: true
+    optimizeFormat: true,
+    position: "relative",
+    x: 0,
+    y: 0
   },
   rules: { canDrag: () => true },
   related: { settings: ImageSettings },

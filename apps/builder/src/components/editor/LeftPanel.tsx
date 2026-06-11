@@ -143,9 +143,9 @@ export const LeftPanel = ({
                     <span className="text-[10px] text-indigo-400 cursor-pointer">See all</span>
                   </div>
                   <div className="builder-thumbnail-grid">
-                    <DraggableThumbnail element={<Element is={HeroSection} canvas />} label="Hero Left Align" thumbnailType="hero" badge="New" />
-                    <DraggableThumbnail element={<Element is={HeroSection} canvas />} label="Hero Center" thumbnailType="hero" />
-                    <DraggableThumbnail element={<Element is={HeroSection} canvas />} label="Hero Split" thumbnailType="hero" badge="AI" />
+                    <DraggableThumbnail element={<Element is={HeroSection} position="absolute" x={50} y={50} canvas />} label="Hero Left Align" thumbnailType="hero" badge="New" />
+                    <DraggableThumbnail element={<Element is={HeroSection} position="absolute" x={50} y={50} canvas />} label="Hero Center" thumbnailType="hero" />
+                    <DraggableThumbnail element={<Element is={HeroSection} position="absolute" x={50} y={50} canvas />} label="Hero Split" thumbnailType="hero" badge="AI" />
                   </div>
                 </>
               )}
@@ -157,8 +157,8 @@ export const LeftPanel = ({
                     <span className="text-[10px] text-indigo-400 cursor-pointer">See all</span>
                   </div>
                   <div className="builder-thumbnail-grid">
-                    <DraggableThumbnail element={<Element is={ServicesGrid} canvas />} label="Feature Grid 3x3" thumbnailType="feature" />
-                    <DraggableThumbnail element={<Element is={ServicesGrid} canvas />} label="Feature Cards" thumbnailType="feature" badge="New" />
+                    <DraggableThumbnail element={<Element is={ServicesGrid} position="absolute" x={50} y={50} canvas />} label="Feature Grid 3x3" thumbnailType="feature" />
+                    <DraggableThumbnail element={<Element is={ServicesGrid} position="absolute" x={50} y={50} canvas />} label="Feature Cards" thumbnailType="feature" badge="New" />
                   </div>
                 </>
               )}
@@ -169,10 +169,10 @@ export const LeftPanel = ({
                     <span className="text-xs font-semibold text-white">Basic Elements</span>
                   </div>
                   <div className="builder-thumbnail-grid">
-                    <DraggableThumbnail element={<Element is={Text} text="Heading" fontSize={32} fontWeight="bold" />} label="Heading" thumbnailType="text" />
-                    <DraggableThumbnail element={<Element is={Text} text="Paragraph text goes here." />} label="Paragraph" thumbnailType="text" />
-                    <DraggableThumbnail element={<Element is={Button} text="Button" />} label="Button" thumbnailType="button" />
-                    <DraggableThumbnail element={<Element is={Image} canvas />} label="Image" thumbnailType="grid" />
+                    <DraggableThumbnail element={<Element is={Text} text="Heading" fontSize={32} fontWeight="bold" position="absolute" x={100} y={100} />} label="Heading" thumbnailType="text" />
+                    <DraggableThumbnail element={<Element is={Text} text="Paragraph text goes here." position="absolute" x={100} y={100} />} label="Paragraph" thumbnailType="text" />
+                    <DraggableThumbnail element={<Element is={Button} text="Button" position="absolute" x={100} y={100} />} label="Button" thumbnailType="button" />
+                    <DraggableThumbnail element={<Element is={Image} position="absolute" x={100} y={100} width={300} height={200} canvas />} label="Image" thumbnailType="grid" />
                   </div>
                 </>
               )}

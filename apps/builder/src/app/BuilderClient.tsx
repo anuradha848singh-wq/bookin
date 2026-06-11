@@ -318,9 +318,9 @@ export default function BuilderClient({ websiteId }: { websiteId: string }) {
   const [previewMode, setPreviewMode] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "unsaved" | "error">("saved");
 
-  const deviceMode = breakpoint === "mobile" ? "mobile" : "desktop";
-  const setDeviceMode = (mode: "desktop" | "mobile") => {
-    setBreakpoint(mode);
+  const deviceMode = breakpoint === "mobile" ? "mobile" : (breakpoint as any === "tablet" ? "tablet" : "desktop");
+  const setDeviceMode = (mode: "desktop" | "tablet" | "mobile") => {
+    setBreakpoint(mode as Breakpoint);
   };
 
   const handleSave = async (content: string) => {

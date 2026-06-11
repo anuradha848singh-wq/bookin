@@ -11,6 +11,11 @@ interface ButtonProps {
   fontSize?: number;
   paddingX?: number;
   paddingY?: number;
+  position?: string;
+  x?: number;
+  y?: number;
+  width?: string | number;
+  height?: string | number;
 }
 
 export const ButtonSettings = () => {
@@ -98,7 +103,20 @@ export const ButtonSettings = () => {
   );
 };
 
-export const Button = ({ text = "Click Me", background = "#000000", color = "#ffffff", borderRadius = 4, fontSize = 14, paddingX = 16, paddingY = 8 }: ButtonProps) => {
+export const Button = ({ 
+  text = "Click Me", 
+  background = "#000000", 
+  color = "#ffffff", 
+  borderRadius = 4, 
+  fontSize = 14, 
+  paddingX = 16, 
+  paddingY = 8,
+  position = "relative",
+  x = 0,
+  y = 0,
+  width = "auto",
+  height = "auto"
+}: ButtonProps) => {
   const { connectors: { connect, drag }, isSelected, actions: { setProp } } = useNode((state) => ({
     isSelected: state.events.selected,
   }));
@@ -122,13 +140,17 @@ export const Button = ({ text = "Click Me", background = "#000000", color = "#ff
         color, 
         borderRadius: `${borderRadius}px`, 
         fontSize: `${fontSize}px`, 
-        padding: `${paddingY}px ${paddingX}px`, 
+        padding: position === "absolute" ? 0 : `${paddingY}px ${paddingX}px`, 
         cursor: editable ? "text" : "pointer", 
         fontWeight: 500, 
-        display: "inline-block", 
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
         outline: isSelected ? "2px solid #0066FF" : "none", 
         outlineOffset: "1px", 
-        transition: editable ? "none" : "all 0.15s" 
+        transition: editable ? "none" : "all 0.15s",
+        width: position === "absolute" ? "100%" : width,
+        height: position === "absolute" ? "100%" : height,
       }}
     >
       <div
@@ -146,7 +168,7 @@ export const Button = ({ text = "Click Me", background = "#000000", color = "#ff
             e.currentTarget.blur();
           }
         }}
-        style={{ outline: "none", minWidth: "10px", display: "inline-block" }}
+        style={{ outline: "none", width: "100%", textAlign: "center" }}
       >
         {text}
       </div>
@@ -156,6 +178,19 @@ export const Button = ({ text = "Click Me", background = "#000000", color = "#ff
 
 Button.craft = {
   displayName: "Button",
-  props: { text: "Click Me", background: "#000000", color: "#ffffff", borderRadius: 4, fontSize: 13, paddingX: 16, paddingY: 8 },
+  props: { 
+    text: "Click Me", 
+    background: "#000000", 
+    color: "#ffffff", 
+    borderRadius: 4, 
+    fontSize: 13, 
+    paddingX: 16, 
+    paddingY: 8,
+    position: "relative",
+    x: 0,
+    y: 0,
+    width: "auto",
+    height: "auto"
+  },
   related: { settings: ButtonSettings },
 };

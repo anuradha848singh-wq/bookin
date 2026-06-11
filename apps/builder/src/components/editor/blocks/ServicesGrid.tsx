@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { useNode } from "@craftjs/core";
+import { useNode, Element } from "@craftjs/core";
+import { Text } from "./Text";
 import { 
   ArrowRight, 
   Heart, 
@@ -37,10 +38,12 @@ interface ServiceItemType {
 interface ServicesGridProps {
   backgroundColor?: string;
   columns?: number;
-  sectionSubtitle?: string;
-  sectionTitle?: string;
-  sectionDescription?: string;
   services?: ServiceItemType[];
+  position?: string;
+  x?: number;
+  y?: number;
+  width?: string | number;
+  height?: string | number;
 }
 
 export const ServicesGridSettings = () => {
@@ -48,16 +51,10 @@ export const ServicesGridSettings = () => {
     actions: { setProp }, 
     backgroundColor, 
     columns,
-    sectionSubtitle,
-    sectionTitle,
-    sectionDescription,
     services
   } = useNode((node) => ({
     backgroundColor: node.data.props.backgroundColor,
     columns: node.data.props.columns,
-    sectionSubtitle: node.data.props.sectionSubtitle,
-    sectionTitle: node.data.props.sectionTitle,
-    sectionDescription: node.data.props.sectionDescription,
     services: node.data.props.services,
   }));
 
@@ -125,41 +122,10 @@ export const ServicesGridSettings = () => {
         </div>
       </div>
 
-      {/* Header Info */}
-      <div className="flex flex-col gap-3 border-b border-gray-100 pb-4">
-        <h4 className="text-xs font-bold text-gray-700">Header Content</h4>
-        <div className="flex flex-col gap-2">
-          <label className={labelClass}>Section Subtitle</label>
-          <input 
-            type="text" 
-            value={sectionSubtitle || ""} 
-            onChange={(e) => setProp((p: ServicesGridProps) => { p.sectionSubtitle = e.target.value; })} 
-            className={inputClass}
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className={labelClass}>Section Title</label>
-          <input 
-            type="text" 
-            value={sectionTitle || ""} 
-            onChange={(e) => setProp((p: ServicesGridProps) => { p.sectionTitle = e.target.value; })} 
-            className={inputClass}
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className={labelClass}>Section Description</label>
-          <textarea 
-            value={sectionDescription || ""} 
-            onChange={(e) => setProp((p: ServicesGridProps) => { p.sectionDescription = e.target.value; })} 
-            className={`${inputClass} min-h-[50px] resize-y`}
-          />
-        </div>
-      </div>
-
       {/* Services List Manager */}
       <div className="flex flex-col gap-3">
         <div className="flex justify-between items-center">
-          <h4 className="text-xs font-bold text-gray-700">Services List</h4>
+          <h4 className="text-xs font-bold text-gray-700">Services Cards</h4>
           <button 
             onClick={handleAddService}
             className="flex items-center gap-1 text-[10px] font-bold text-blue-500 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded transition-colors"
@@ -249,9 +215,11 @@ const ServiceCard = ({ title, desc, iconName }: { title: string, desc: string, i
 export const ServicesGrid = ({ 
   backgroundColor = "#FAFAFA", 
   columns = 3,
-  sectionSubtitle = "Our Specialties",
-  sectionTitle = "High-Quality Medical Services",
-  sectionDescription = "Explore our specialized clinical divisions dedicated to providing expert diagnostics and patient care.",
+  position = "relative",
+  x = 0,
+  y = 0,
+  width = "100%",
+  height = "auto",
   services = [
     {
       title: "General Medicine",
@@ -282,26 +250,26 @@ export const ServicesGrid = ({
   return (
     <div
       ref={(ref) => { connect(drag(ref as HTMLElement)); }}
-      style={{ backgroundColor, outline: isSelected ? "2px solid #0066FF" : "none", outlineOffset: "-2px" }}
+      style={{ 
+        backgroundColor, 
+        outline: isSelected ? "2px solid #0066FF" : "none", 
+        outlineOffset: "-2px",
+        width: position === "absolute" ? "100%" : width,
+        height: position === "absolute" ? "100%" : height,
+      }}
       className="py-20 px-6 w-full relative border-b border-[#E5E5E5] flex flex-col items-center font-sans select-none"
     >
       <div className="max-w-5xl w-full mx-auto flex flex-col items-center">
         <div className="flex flex-col items-center text-center mb-12">
-          {sectionSubtitle && (
-            <span className="text-[#115E59] font-extrabold tracking-[0.15em] uppercase text-[9.5px] bg-teal-50 px-3 py-1 rounded-full mb-3.5 block border border-[#115E59]/10">
-              {sectionSubtitle}
-            </span>
-          )}
-          {sectionTitle && (
-            <h2 className="text-3xl font-black text-gray-900 tracking-tight leading-tight">
-              {sectionTitle}
-            </h2>
-          )}
-          {sectionDescription && (
-            <p className="text-[13.5px] text-gray-500 font-medium max-w-md mt-2">
-              {sectionDescription}
-            </p>
-          )}
+          <div className="mb-3.5 border border-[#115E59]/10 rounded-full px-1 bg-teal-50">
+            <Element id="sectionSubtitle" is={Text} text="OUR SPECIALTIES" fontSize={9.5} fontWeight="800" color="#115E59" />
+          </div>
+          <div className="w-full flex justify-center mb-2">
+            <Element id="sectionTitle" is={Text} text="High-Quality Medical Services" fontSize={30} fontWeight="900" color="#111827" />
+          </div>
+          <div className="max-w-md flex justify-center">
+             <Element id="sectionDescription" is={Text} text="Explore our specialized clinical divisions dedicated to providing expert diagnostics and patient care." fontSize={13.5} fontWeight="500" color="#6B7280" />
+          </div>
         </div>
         
         <div 
@@ -322,9 +290,11 @@ ServicesGrid.craft = {
   props: { 
     backgroundColor: "#FAFAFA", 
     columns: 3,
-    sectionSubtitle: "Our Specialties",
-    sectionTitle: "High-Quality Medical Services",
-    sectionDescription: "Explore our specialized clinical divisions dedicated to providing expert diagnostics and patient care.",
+    position: "relative",
+    x: 0,
+    y: 0,
+    width: "100%",
+    height: "auto",
     services: [
       {
         title: "General Medicine",

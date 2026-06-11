@@ -4,10 +4,17 @@ import React from "react";
 import { useEditor } from "@craftjs/core";
 import { Layers, Cuboid, Database, CloudOff, Cloud, ZoomIn, ZoomOut, Grid, MousePointer2 } from "lucide-react";
 
+import { useControls, useTransformContext } from "react-zoom-pan-pinch";
+
 export const BottomToolbar = ({ saveStatus }: { saveStatus: "saved" | "saving" | "unsaved" | "error" }) => {
   const { nodes } = useEditor((state) => ({
     nodes: state.nodes
   }));
+
+  const { zoomIn, zoomOut } = useControls();
+  const ctx = useTransformContext();
+  const scale = (ctx as any).transformState?.scale ?? (ctx as any).state?.scale ?? 1;
+  const zoomPercent = Math.round(scale * 100);
 
   const elementCount = Object.keys(nodes).length;
 
@@ -42,9 +49,9 @@ export const BottomToolbar = ({ saveStatus }: { saveStatus: "saved" | "saving" |
         </div>
 
         <div className="builder-zoom-controls">
-          <button className="builder-zoom-btn"><ZoomOut size={12} /></button>
-          <div className="builder-zoom-value">100%</div>
-          <button className="builder-zoom-btn"><ZoomIn size={12} /></button>
+          <button className="builder-zoom-btn" onClick={() => zoomOut(0.2)}><ZoomOut size={12} /></button>
+          <div className="builder-zoom-value w-[45px] text-center">{zoomPercent}%</div>
+          <button className="builder-zoom-btn" onClick={() => zoomIn(0.2)}><ZoomIn size={12} /></button>
         </div>
 
         <button className="builder-bottom-item hover:text-white ml-2 bg-transparent border-none cursor-pointer">

@@ -5,7 +5,17 @@ import { useEditor } from "@craftjs/core";
 import { Maximize, Link, ChevronDown, ChevronRight, Lock, Unlock, AlignLeft, AlignCenter, AlignRight, AlignJustify } from "lucide-react";
 
 export const SettingsPanel = () => {
-  const [activeTab, setActiveTab] = useState<"design" | "layout" | "content" | "interactions" | "responsive">("design");
+  const [openSections, setOpenSections] = useState({
+    content: true,
+    layout: true,
+    spacing: true,
+    typography: true,
+    background: false,
+    borders: false,
+    effects: false,
+    interactions: false
+  });
+
   const { actions, selected, isEnabled, props } = useEditor((state, query) => {
     const [currentNodeId] = state.events.selected;
     let selected;
@@ -28,6 +38,10 @@ export const SettingsPanel = () => {
     };
   });
 
+  const toggleSection = (section: keyof typeof openSections) => {
+    setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
   const handlePropChange = (key: string, value: any) => {
     if (!selected) return;
     actions.setProp(selected.id, (p: any) => {
@@ -43,10 +57,15 @@ export const SettingsPanel = () => {
     );
   }
 
-  const hasTypography = props.fontSize !== undefined || props.fontWeight !== undefined || props.color !== undefined;
-  const hasBackground = props.background !== undefined;
-  const hasBorder = props.borderRadius !== undefined;
-  const hasEffects = props.shadow !== undefined;
+  const AccordionHeader = ({ title, section }: { title: string, section: keyof typeof openSections }) => (
+    <div 
+      className="flex items-center justify-between px-4 py-2.5 cursor-pointer border-t border-[#2C2D33] hover:bg-[#1A1A1E] transition-colors select-none"
+      onClick={() => toggleSection(section)}
+    >
+      <span className="text-[11px] font-semibold tracking-wider uppercase text-gray-300">{title}</span>
+      {openSections[section] ? <ChevronDown size={14} className="text-gray-500" /> : <ChevronRight size={14} className="text-gray-500" />}
+    </div>
+  );
 
   return (
     <div className="builder-settings-panel">
@@ -64,172 +83,107 @@ export const SettingsPanel = () => {
         </button>
       </div>
       
-      {/* Tabs */}
-      <div className="builder-settings-tabs">
-        <button onClick={() => setActiveTab("design")} className={`builder-settings-tab ${activeTab === "design" ? "active" : ""}`}>Design</button>
-        <button onClick={() => setActiveTab("layout")} className={`builder-settings-tab ${activeTab === "layout" ? "active" : ""}`}>Layout</button>
-        <button onClick={() => setActiveTab("content")} className={`builder-settings-tab ${activeTab === "content" ? "active" : ""}`}>Content</button>
-        <button onClick={() => setActiveTab("interactions")} className={`builder-settings-tab ${activeTab === "interactions" ? "active" : ""}`}>Interactions</button>
-        <button onClick={() => setActiveTab("responsive")} className={`builder-settings-tab ${activeTab === "responsive" ? "active" : ""}`}>Responsive</button>
-      </div>
+      {/* Scrollable Properties List */}
+      <div className="flex-1 overflow-y-auto hide-scrollbar pb-10">
+        
+        {/* Content Section (Custom Component Settings) */}
+        {selected.settings && (
+          <>
+            <AccordionHeader title="Content" section="content" />
+            {openSections.content && (
+              <div className="p-4 bg-[#111115]">
+                {React.createElement(selected.settings as any)}
+              </div>
+            )}
+          </>
+        )}
 
-      {/* Tab Panels */}
-      <div className="builder-settings-content hide-scrollbar">
-        {activeTab === "design" && (
-          <div className="flex flex-col">
-            
-            {/* Typography Section */}
-            <div className="builder-settings-section">
-              <div className="builder-settings-section-title">Typography <ChevronDown size={14} className="text-gray-500" /></div>
-              
-              <div className="flex flex-col gap-3">
-                <div className="builder-settings-row">
-                  <span className="builder-settings-label">Font Family</span>
-                  <select className="builder-settings-select" style={{ width: '180px' }}>
-                    <option>Inter</option>
-                    <option>Roboto</option>
-                    <option>Outfit</option>
-                    <option>Plus Jakarta Sans</option>
+        {/* Layout Constraints & Flex */}
+        <AccordionHeader title="Layout" section="layout" />
+        {openSections.layout && (
+          <div className="p-4 flex flex-col gap-4 bg-[#111115]">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex flex-col gap-1.5 flex-1">
+                <span className="builder-settings-label text-[10px]">W</span>
+                <div className="builder-settings-input">
+                  <input type="text" value={props.width || 'auto'} onChange={(e) => handlePropChange("width", e.target.value)} />
+                </div>
+              </div>
+              <div className="flex flex-col gap-1.5 flex-1">
+                <span className="builder-settings-label text-[10px]">H</span>
+                <div className="builder-settings-input">
+                  <input type="text" value={props.height || 'auto'} onChange={(e) => handlePropChange("height", e.target.value)} />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-2">
+               <div className="flex flex-col gap-1.5 flex-1">
+                <span className="builder-settings-label text-[10px]">Display</span>
+                <select 
+                  className="builder-settings-select"
+                  value={props.display || 'block'}
+                  onChange={(e) => handlePropChange("display", e.target.value)}
+                >
+                  <option value="block">Block</option>
+                  <option value="flex">Flexbox</option>
+                  <option value="grid">Grid</option>
+                  <option value="inline-block">Inline</option>
+                </select>
+              </div>
+              {props.display === 'flex' && (
+                <div className="flex flex-col gap-1.5 flex-1">
+                  <span className="builder-settings-label text-[10px]">Direction</span>
+                  <select 
+                    className="builder-settings-select"
+                    value={props.flexDirection || 'column'}
+                    onChange={(e) => handlePropChange("flexDirection", e.target.value)}
+                  >
+                    <option value="row">Horizontal</option>
+                    <option value="column">Vertical</option>
                   </select>
                 </div>
-                
-                {props.fontWeight !== undefined && (
-                  <div className="builder-settings-row">
-                    <span className="builder-settings-label">Weight</span>
-                    <select 
-                      value={props.fontWeight} 
-                      onChange={(e) => handlePropChange("fontWeight", e.target.value)}
-                      className="builder-settings-select" style={{ width: '180px' }}
-                    >
-                      <option value="400">Regular</option>
-                      <option value="500">Medium</option>
-                      <option value="600">Semibold</option>
-                      <option value="700">Bold</option>
-                      <option value="800">Extrabold</option>
-                    </select>
-                  </div>
-                )}
-                
-                <div className="flex items-center gap-3 mt-1">
-                  {props.fontSize !== undefined && (
-                    <div className="flex-1 flex flex-col gap-1.5">
-                      <span className="builder-settings-label text-[10px]">Size</span>
-                      <div className="builder-settings-input">
-                        <input type="number" value={props.fontSize} onChange={(e) => handlePropChange("fontSize", parseInt(e.target.value))} />
-                        <span className="text-[10px] text-gray-500">px</span>
-                      </div>
-                    </div>
-                  )}
-                  <div className="flex-1 flex flex-col gap-1.5">
-                    <span className="builder-settings-label text-[10px]">Line Height</span>
-                    <div className="builder-settings-input">
-                      <input type="text" defaultValue="1.5" />
-                    </div>
+              )}
+            </div>
+
+            {props.display === 'flex' && (
+              <>
+                <div className="flex flex-col gap-1.5">
+                  <span className="builder-settings-label text-[10px]">Alignment</span>
+                  <div className="flex bg-[#1A1A1E] border border-[#2C2D33] rounded-md overflow-hidden">
+                    {['flex-start', 'center', 'flex-end', 'space-between'].map(align => (
+                      <button
+                        key={align}
+                        className={`flex-1 p-1.5 text-center border-r border-[#2C2D33] last:border-0 hover:bg-[#2C2D33] ${props.justifyContent === align ? 'bg-[#3F404A] text-white' : 'text-gray-500'}`}
+                        onClick={() => handlePropChange("justifyContent", align)}
+                        title={`Justify: ${align}`}
+                      >
+                        {align === 'flex-start' && <AlignLeft size={14} className="mx-auto" />}
+                        {align === 'center' && <AlignCenter size={14} className="mx-auto" />}
+                        {align === 'flex-end' && <AlignRight size={14} className="mx-auto" />}
+                        {align === 'space-between' && <AlignJustify size={14} className="mx-auto" />}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                {props.color !== undefined && (
-                  <div className="builder-settings-row mt-2">
-                    <span className="builder-settings-label">Color</span>
-                    <div className="builder-settings-input" style={{ width: '180px', gap: '8px', position: 'relative' }}>
-                      <input type="color" value={props.color} onChange={(e) => handlePropChange("color", e.target.value)} style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }} />
-                      <div className="w-4 h-4 rounded-sm border border-[#3F404A]" style={{ backgroundColor: props.color || '#000000' }}></div>
-                      <span className="font-mono text-[11px] uppercase">{props.color || "#000000"}</span>
-                      <span className="ml-auto text-gray-500 text-[10px]">100%</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Background Section */}
-            <div className="builder-settings-section">
-              <div className="builder-settings-section-title">Background <PlusCircle size={14} className="text-gray-500" /></div>
-              <div className="builder-settings-row">
-                <span className="builder-settings-label">Fill</span>
-                <div className="builder-settings-input" style={{ width: '180px', gap: '8px', position: 'relative' }}>
-                  <input type="color" value={props.background || '#ffffff'} onChange={(e) => handlePropChange("background", e.target.value)} style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }} />
-                  <div className="w-4 h-4 rounded-sm border border-[#3F404A]" style={{ backgroundColor: props.background || 'transparent' }}></div>
-                  <span className="font-mono text-[11px] uppercase">{props.background === "transparent" ? "None" : (props.background || "#ffffff")}</span>
-                  <span className="ml-auto text-gray-500 text-[10px]">100%</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Borders Section */}
-            <div className="builder-settings-section">
-              <div className="builder-settings-section-title">Borders <PlusCircle size={14} className="text-gray-500" /></div>
-              <div className="flex items-center gap-3">
-                <div className="flex-1 flex flex-col gap-1.5">
-                  <span className="builder-settings-label text-[10px]">Radius</span>
+                <div className="flex flex-col gap-1.5">
+                  <span className="builder-settings-label text-[10px]">Gap</span>
                   <div className="builder-settings-input">
-                    <input type="number" value={props.borderRadius || 0} onChange={(e) => handlePropChange("borderRadius", parseInt(e.target.value))} />
+                    <input type="number" value={props.gap || 0} onChange={(e) => handlePropChange("gap", parseInt(e.target.value))} />
                     <span className="text-[10px] text-gray-500">px</span>
                   </div>
                 </div>
-                <div className="flex-1 flex flex-col gap-1.5">
-                  <span className="builder-settings-label text-[10px]">Width</span>
-                  <div className="builder-settings-input">
-                    <input type="number" defaultValue="0" />
-                    <span className="text-[10px] text-gray-500">px</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Effects Section */}
-            <div className="builder-settings-section">
-              <div className="builder-settings-section-title">Effects <PlusCircle size={14} className="text-gray-500" /></div>
-              <div className="builder-settings-row">
-                <span className="builder-settings-label">Shadow</span>
-                <div className="builder-settings-input" style={{ width: '180px' }}>
-                  <input type="text" value={props.shadow || ''} onChange={(e) => handlePropChange("shadow", e.target.value)} placeholder="none" />
-                </div>
-              </div>
-            </div>
-            
+              </>
+            )}
           </div>
         )}
 
-        {activeTab === "layout" && (
-          <div className="flex flex-col">
-            <div className="builder-settings-section">
-              <div className="builder-settings-section-title">Layout Constraints <ChevronDown size={14} className="text-gray-500" /></div>
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 flex flex-col gap-1.5">
-                    <span className="builder-settings-label text-[10px]">W</span>
-                    <div className="builder-settings-input">
-                      <input type="text" defaultValue="auto" />
-                    </div>
-                  </div>
-                  <div className="flex-1 flex flex-col gap-1.5">
-                    <span className="builder-settings-label text-[10px]">H</span>
-                    <div className="builder-settings-input">
-                      <input type="text" defaultValue="auto" />
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 flex flex-col gap-1.5">
-                    <span className="builder-settings-label text-[10px]">Min W</span>
-                    <div className="builder-settings-input">
-                      <input type="text" defaultValue="" />
-                    </div>
-                  </div>
-                  <div className="flex-1 flex flex-col gap-1.5">
-                    <span className="builder-settings-label text-[10px]">Max W</span>
-                    <div className="builder-settings-input">
-                      <input type="text" defaultValue="1200px" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="builder-settings-section">
-              <div className="builder-settings-section-title">Spacing <ChevronDown size={14} className="text-gray-500" /></div>
-              <div className="builder-box-model">
+        {/* Spacing (Box Model) */}
+        <AccordionHeader title="Spacing" section="spacing" />
+        {openSections.spacing && (
+          <div className="p-4 bg-[#111115] flex justify-center">
+             <div className="builder-box-model transform scale-90 origin-top">
                 <div className="builder-box-margin">
                   <input type="text" className="builder-box-input top" defaultValue="0" />
                   <input type="text" className="builder-box-input bottom" defaultValue="0" />
@@ -250,36 +204,138 @@ export const SettingsPanel = () => {
                   </div>
                 </div>
               </div>
+          </div>
+        )}
+
+        {/* Typography */}
+        <AccordionHeader title="Typography" section="typography" />
+        {openSections.typography && (
+          <div className="p-4 flex flex-col gap-3 bg-[#111115]">
+            <div className="builder-settings-row">
+              <span className="builder-settings-label">Font</span>
+              <select className="builder-settings-select" style={{ width: '160px' }}>
+                <option>Inter</option>
+                <option>Roboto</option>
+                <option>Outfit</option>
+              </select>
+            </div>
+            
+            <div className="builder-settings-row">
+              <span className="builder-settings-label">Weight</span>
+              <select 
+                value={props.fontWeight || '400'} 
+                onChange={(e) => handlePropChange("fontWeight", e.target.value)}
+                className="builder-settings-select" style={{ width: '160px' }}
+              >
+                <option value="400">Regular</option>
+                <option value="500">Medium</option>
+                <option value="600">Semibold</option>
+                <option value="700">Bold</option>
+              </select>
+            </div>
+            
+            <div className="flex items-center gap-2 mt-1">
+              <div className="flex-1 flex flex-col gap-1.5">
+                <span className="builder-settings-label text-[10px]">Size</span>
+                <div className="builder-settings-input">
+                  <input type="number" value={props.fontSize || 16} onChange={(e) => handlePropChange("fontSize", parseInt(e.target.value))} />
+                  <span className="text-[10px] text-gray-500">px</span>
+                </div>
+              </div>
+              <div className="flex-1 flex flex-col gap-1.5">
+                <span className="builder-settings-label text-[10px]">Line Height</span>
+                <div className="builder-settings-input">
+                  <input type="text" value={props.lineHeight || '1.5'} onChange={(e) => handlePropChange("lineHeight", e.target.value)} />
+                </div>
+              </div>
+            </div>
+
+            <div className="builder-settings-row mt-2">
+              <span className="builder-settings-label">Color</span>
+              <div className="builder-settings-input" style={{ width: '160px', gap: '8px', position: 'relative' }}>
+                <input type="color" value={props.color || '#000000'} onChange={(e) => handlePropChange("color", e.target.value)} style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }} />
+                <div className="w-4 h-4 rounded-sm border border-[#3F404A]" style={{ backgroundColor: props.color || '#000000' }}></div>
+                <span className="font-mono text-[11px] uppercase">{props.color || "#000000"}</span>
+              </div>
             </div>
           </div>
         )}
 
-        {activeTab === "content" && (
-           <div className="flex flex-col">
-             <div className="builder-settings-section">
-               {selected.settings ? React.createElement(selected.settings as any) : (
-                 <p className="text-xs text-gray-500 text-center">No content settings for this component.</p>
-               )}
-             </div>
-           </div>
-        )}
-
-        {activeTab === "interactions" && (
-           <div className="flex flex-col">
-            <div className="builder-settings-section">
-              <div className="builder-settings-section-title">Hover Effects</div>
-              <div className="builder-settings-row">
-                <span className="builder-settings-label">Preset</span>
-                <select className="builder-settings-select" style={{ width: '180px' }}>
-                  <option>None</option>
-                  <option>Scale Up</option>
-                  <option>Lift & Glow</option>
-                  <option>Fade In</option>
-                </select>
+        {/* Fill / Background */}
+        <AccordionHeader title="Fill" section="background" />
+        {openSections.background && (
+          <div className="p-4 bg-[#111115]">
+            <div className="builder-settings-row">
+              <span className="builder-settings-label">Color</span>
+              <div className="builder-settings-input" style={{ width: '160px', gap: '8px', position: 'relative' }}>
+                <input type="color" value={props.background || '#ffffff'} onChange={(e) => handlePropChange("background", e.target.value)} style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }} />
+                <div className="w-4 h-4 rounded-sm border border-[#3F404A]" style={{ backgroundColor: props.background || 'transparent' }}></div>
+                <span className="font-mono text-[11px] uppercase">{props.background === "transparent" ? "None" : (props.background || "#ffffff")}</span>
               </div>
             </div>
-           </div>
+          </div>
         )}
+
+        {/* Borders */}
+        <AccordionHeader title="Borders" section="borders" />
+        {openSections.borders && (
+          <div className="p-4 flex flex-col gap-3 bg-[#111115]">
+            <div className="flex items-center gap-2">
+              <div className="flex-1 flex flex-col gap-1.5">
+                <span className="builder-settings-label text-[10px]">Radius</span>
+                <div className="builder-settings-input">
+                  <input type="number" value={props.borderRadius || 0} onChange={(e) => handlePropChange("borderRadius", parseInt(e.target.value))} />
+                  <span className="text-[10px] text-gray-500">px</span>
+                </div>
+              </div>
+              <div className="flex-1 flex flex-col gap-1.5">
+                <span className="builder-settings-label text-[10px]">Width</span>
+                <div className="builder-settings-input">
+                  <input type="number" value={props.borderWidth || 0} onChange={(e) => handlePropChange("borderWidth", parseInt(e.target.value))} />
+                  <span className="text-[10px] text-gray-500">px</span>
+                </div>
+              </div>
+            </div>
+            <div className="builder-settings-row">
+              <span className="builder-settings-label">Color</span>
+              <div className="builder-settings-input" style={{ width: '160px', gap: '8px', position: 'relative' }}>
+                <input type="color" value={props.borderColor || '#e5e7eb'} onChange={(e) => handlePropChange("borderColor", e.target.value)} style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }} />
+                <div className="w-4 h-4 rounded-sm border border-[#3F404A]" style={{ backgroundColor: props.borderColor || '#e5e7eb' }}></div>
+                <span className="font-mono text-[11px] uppercase">{props.borderColor || "#E5E7EB"}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Effects */}
+        <AccordionHeader title="Effects" section="effects" />
+        {openSections.effects && (
+          <div className="p-4 bg-[#111115]">
+            <div className="builder-settings-row">
+              <span className="builder-settings-label">Shadow</span>
+              <div className="builder-settings-input" style={{ width: '160px' }}>
+                <input type="text" value={props.shadow || ''} onChange={(e) => handlePropChange("shadow", e.target.value)} placeholder="0px 4px 10px rgba(0,0,0,0.1)" />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Interactions */}
+        <AccordionHeader title="Interactions" section="interactions" />
+        {openSections.interactions && (
+          <div className="p-4 bg-[#111115]">
+            <div className="builder-settings-row">
+              <span className="builder-settings-label">Hover Preset</span>
+              <select className="builder-settings-select" style={{ width: '160px' }}>
+                <option>None</option>
+                <option>Scale Up</option>
+                <option>Lift & Glow</option>
+                <option>Fade In</option>
+              </select>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

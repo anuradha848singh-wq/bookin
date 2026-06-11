@@ -16,8 +16,8 @@ interface TopbarProps {
   onSave: (data: string) => Promise<void>;
   onLoad: () => Promise<string | null>;
   activeSlug: string;
-  deviceMode: "desktop" | "mobile";
-  setDeviceMode: (mode: "desktop" | "mobile") => void;
+  deviceMode: "desktop" | "tablet" | "mobile";
+  setDeviceMode: (mode: "desktop" | "tablet" | "mobile") => void;
   previewMode: boolean;
   setPreviewMode: (value: boolean) => void;
   saveStatus: "saved" | "saving" | "unsaved" | "error";
@@ -109,7 +109,12 @@ export const Topbar = ({
           >
             <Monitor size={15} />
           </button>
-          <button type="button" className="builder-icon-button" disabled title="Tablet preview coming soon">
+          <button 
+            type="button" 
+            onClick={() => setDeviceMode("tablet")}
+            className={`builder-icon-button ${deviceMode === "tablet" ? "active" : ""}`}
+            title="Tablet"
+          >
             <Tablet size={15} />
           </button>
           <button

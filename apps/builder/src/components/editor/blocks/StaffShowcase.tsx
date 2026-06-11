@@ -1,9 +1,10 @@
 "use client";
 
 import React from "react";
-import { useNode } from "@craftjs/core";
+import { useNode, Element } from "@craftjs/core";
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, Plus, Trash2, ChevronDown, Sparkles } from "lucide-react";
+import { Text } from "./Text";
+import { Calendar, Plus, Trash2, Sparkles } from "lucide-react";
 
 interface StaffMemberType {
   name: string;
@@ -15,9 +16,6 @@ interface StaffMemberType {
 interface StaffShowcaseProps {
   backgroundColor?: string;
   columns?: number;
-  sectionSubtitle?: string;
-  sectionTitle?: string;
-  sectionDescription?: string;
   useDynamicStaff?: boolean;
   staffMembers?: StaffMemberType[];
 }
@@ -27,17 +25,11 @@ export const StaffShowcaseSettings = () => {
     actions: { setProp }, 
     backgroundColor, 
     columns,
-    sectionSubtitle,
-    sectionTitle,
-    sectionDescription,
     useDynamicStaff,
     staffMembers
   } = useNode((node) => ({
     backgroundColor: node.data.props.backgroundColor,
     columns: node.data.props.columns,
-    sectionSubtitle: node.data.props.sectionSubtitle,
-    sectionTitle: node.data.props.sectionTitle,
-    sectionDescription: node.data.props.sectionDescription,
     useDynamicStaff: node.data.props.useDynamicStaff,
     staffMembers: node.data.props.staffMembers,
   }));
@@ -104,37 +96,6 @@ export const StaffShowcaseSettings = () => {
               </button>
             ))}
           </div>
-        </div>
-      </div>
-
-      {/* Header Info */}
-      <div className="flex flex-col gap-3 border-b border-gray-100 pb-4">
-        <h4 className="text-xs font-bold text-gray-700">Header Content</h4>
-        <div className="flex flex-col gap-2">
-          <label className={labelClass}>Section Subtitle</label>
-          <input 
-            type="text" 
-            value={sectionSubtitle || ""} 
-            onChange={(e) => setProp((p: StaffShowcaseProps) => { p.sectionSubtitle = e.target.value; })} 
-            className={inputClass}
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className={labelClass}>Section Title</label>
-          <input 
-            type="text" 
-            value={sectionTitle || ""} 
-            onChange={(e) => setProp((p: StaffShowcaseProps) => { p.sectionTitle = e.target.value; })} 
-            className={inputClass}
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className={labelClass}>Section Description</label>
-          <textarea 
-            value={sectionDescription || ""} 
-            onChange={(e) => setProp((p: StaffShowcaseProps) => { p.sectionDescription = e.target.value; })} 
-            className={`${inputClass} min-h-[50px] resize-y`}
-          />
         </div>
       </div>
 
@@ -276,9 +237,6 @@ const StaffCard = ({ name, role, image, nextAvailable }: { name: string, role: s
 export const StaffShowcase = ({ 
   backgroundColor = "#FAFAFA", 
   columns = 3,
-  sectionSubtitle = "Medical Experts",
-  sectionTitle = "Meet Our Experts",
-  sectionDescription = "Book directly with your preferred medical specialist.",
   useDynamicStaff = true,
   staffMembers = [
     {
@@ -330,22 +288,16 @@ export const StaffShowcase = ({
       className="py-20 px-6 w-full relative border-y border-[#E5E5E5] flex flex-col items-center font-sans select-none"
     >
       <div className="max-w-5xl w-full mx-auto flex flex-col items-center">
-        <div className="text-center mb-12 flex flex-col items-center">
-          {sectionSubtitle && (
-            <span className="text-[#115E59] font-extrabold tracking-[0.15em] uppercase text-[9.5px] bg-teal-50 px-3 py-1 rounded-full mb-3.5 inline-block border border-[#115E59]/10 text-center">
-              {sectionSubtitle}
-            </span>
-          )}
-          {sectionTitle && (
-            <h2 className="text-3xl font-black text-gray-900 tracking-tight leading-tight text-center">
-              {sectionTitle}
-            </h2>
-          )}
-          {sectionDescription && (
-            <p className="text-[13.5px] text-gray-500 font-medium max-w-md mt-2 text-center">
-              {sectionDescription}
-            </p>
-          )}
+        <div className="text-center mb-12 flex flex-col items-center w-full">
+          <div className="mb-3.5 border border-[#115E59]/10 rounded-full px-1 bg-teal-50">
+            <Element id="sectionSubtitle" is={Text} text="MEDICAL EXPERTS" fontSize={9.5} fontWeight="800" color="#115E59" />
+          </div>
+          <div className="w-full flex justify-center mb-2">
+            <Element id="sectionTitle" is={Text} text="Meet Our Experts" fontSize={30} fontWeight="900" color="#111827" />
+          </div>
+          <div className="max-w-md flex justify-center">
+             <Element id="sectionDescription" is={Text} text="Book directly with your preferred medical specialist." fontSize={13.5} fontWeight="500" color="#6B7280" />
+          </div>
         </div>
         
         {useDynamicStaff && loading && !staffData ? (
@@ -370,9 +322,6 @@ StaffShowcase.craft = {
   props: { 
     backgroundColor: "#FAFAFA", 
     columns: 3,
-    sectionSubtitle: "Medical Experts",
-    sectionTitle: "Meet Our Experts",
-    sectionDescription: "Book directly with your preferred medical specialist.",
     useDynamicStaff: true,
     staffMembers: [
       {

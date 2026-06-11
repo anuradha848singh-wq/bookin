@@ -92,28 +92,28 @@ const SelectionOverlay = ({ dom, name, id }: { dom: HTMLElement, name: string, i
   );
 };
 
+import { Rnd } from "react-rnd";
+
 export const RenderNode = ({ render }: { render: React.ReactNode }) => {
   const { id } = useNode();
+  const { actions, query } = useEditor();
   
-  const { isActive } = useEditor((_, query) => ({
-    isActive: query.getEvent('selected').contains(id),
-  }));
-
-  const { dom, name, hoverEffect } = useNode((node) => ({
+  const { isActive, isRoot, dom, name, hoverEffect, props, parentId } = useNode((node) => ({
+    isActive: query.getEvent('selected').contains(node.id),
+    isRoot: node.data.parent === 'ROOT',
     dom: node.dom,
     name: node.data.custom.displayName || node.data.name,
     hoverEffect: node.data.props.animation?.hover || "",
+    props: node.data.props,
+    parentId: node.data.parent
   }));
 
   const prevHoverRef = useRef<string>("");
 
-  // We remove outline from DOM nodes injected by Craft to use our Portal overlay instead
-  // We also apply the hover effect classes
   useEffect(() => {
     if (dom) {
-      dom.style.outline = 'none'; // Prevent standard Craft outline
+      dom.style.outline = 'none';
 
-      // Handle Hover Effects
       const baseClasses = ['transition-all', 'duration-300', 'ease-in-out'];
       
       if (prevHoverRef.current && prevHoverRef.current !== hoverEffect) {
@@ -131,6 +131,47 @@ export const RenderNode = ({ render }: { render: React.ReactNode }) => {
     }
   }, [dom, hoverEffect]);
 
+  // If this is the Root node (the main Canvas), do not wrap it in Rnd.
+  // Also, if the element doesn't opt-in to absolute positioning yet (Phase 3 transition), 
+  // we fallback to standard rendering. For now, we'll force absolute on children of ROOT.
+  const isAbsolute = !isRoot && props.position === 'absolute';
+
+  if (isAbsolute) {
+    return (
+      <Rnd
+        position={{ x: props.x || 0, y: props.y || 0 }}
+        size={{ width: props.width || 'auto', height: props.height || 'auto' }}
+        onDragStop={(e, d) => {
+          actions.setProp(id, (p: any) => {
+            p.x = d.x;
+            p.y = d.y;
+          });
+        }}
+        onResizeStop={(e, direction, ref, delta, position) => {
+          actions.setProp(id, (p: any) => {
+            p.width = ref.style.width;
+            p.height = ref.style.height;
+            p.x = position.x;
+            p.y = position.y;
+          });
+        }}
+        bounds="parent"
+        className={isActive ? "ring-2 ring-blue-500 z-50" : "hover:ring-1 hover:ring-blue-300 z-10"}
+        style={{ position: 'absolute' }}
+        enableResizing={isActive} // Only show resize handles when selected
+        disableDragging={!isActive} // Only drag when selected, to allow interacting with children
+      >
+        {render}
+        {isActive && dom && (
+           <div className="absolute -top-6 -left-0.5 bg-blue-500 text-white text-[10px] font-bold px-2 py-1 rounded-t-md whitespace-nowrap shadow-sm pointer-events-auto">
+             {name}
+           </div>
+        )}
+      </Rnd>
+    );
+  }
+
+  // Standard Flow Render
   return (
     <>
       {render}

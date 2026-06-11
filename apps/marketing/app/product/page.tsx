@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { T } from "../theme";
+import { getLoginUrl } from "../utils/env";
 
 export default function ProductPage() {
   const features = [
@@ -57,7 +57,7 @@ export default function ProductPage() {
         <p style={{ fontSize: 16, color: T.muted, maxWidth: 640, margin: "0 auto 32px auto", lineHeight: 1.7, fontWeight: 500 }}>
           Bookin combines patient/customer scheduling, calendar management, and conversion-optimized website analytics in a single drop-in system.
         </p>
-        <a href={process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL}/login` : "http://localhost:3002/login"} className="bk-btn-red" style={{ padding: "12px 28px", fontSize: 15 }}>
+        <a href={getLoginUrl()} className="bk-btn-red" style={{ padding: "12px 28px", fontSize: 15 }}>
           Start Using Bookin Free &rarr;
         </a>
       </section>

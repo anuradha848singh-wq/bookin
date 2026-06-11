@@ -10,6 +10,11 @@ interface TextProps {
   textAlign?: "left" | "center" | "right";
   fontWeight?: string;
   color?: string;
+  position?: string;
+  x?: number;
+  y?: number;
+  width?: string | number;
+  height?: string | number;
 }
 
 export const TextSettings = () => {
@@ -93,7 +98,18 @@ export const TextSettings = () => {
   );
 };
 
-export const Text = ({ text = "New Text", fontSize = 16, textAlign = "left", fontWeight = "400", color = "#111827" }: TextProps) => {
+export const Text = ({ 
+  text = "New Text", 
+  fontSize = 16, 
+  textAlign = "left", 
+  fontWeight = "400", 
+  color = "#111827",
+  position = "relative",
+  x = 0,
+  y = 0,
+  width = "100%",
+  height = "100%"
+}: TextProps) => {
   const { connectors: { connect, drag }, isSelected, actions: { setProp } } = useNode((state) => ({
     isSelected: state.events.selected,
   }));
@@ -122,7 +138,13 @@ export const Text = ({ text = "New Text", fontSize = 16, textAlign = "left", fon
         borderRadius: "2px", 
         outline: isSelected ? "2px solid #0066FF" : "none", 
         outlineOffset: "1px",
-        cursor: editable ? "text" : "pointer" 
+        cursor: editable ? "text" : "pointer",
+        width: position === "absolute" ? "100%" : width,
+        height: position === "absolute" ? "100%" : height,
+        minWidth: "60px",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center"
       }}
     >
       <div
@@ -135,13 +157,12 @@ export const Text = ({ text = "New Text", fontSize = 16, textAlign = "left", fon
           setProp((p: TextProps) => { p.text = currentText; }, 500);
         }}
         onKeyDown={(e) => {
-          // Blur on Enter to save
           if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             e.currentTarget.blur();
           }
         }}
-        style={{ outline: "none", minWidth: "10px" }}
+        style={{ outline: "none", width: "100%" }}
       >
         {text}
       </div>
@@ -151,6 +172,17 @@ export const Text = ({ text = "New Text", fontSize = 16, textAlign = "left", fon
 
 Text.craft = {
   displayName: "Text",
-  props: { text: "New Text", fontSize: 16, textAlign: "left", fontWeight: "400", color: "#111827" },
+  props: { 
+    text: "New Text", 
+    fontSize: 16, 
+    textAlign: "left", 
+    fontWeight: "400", 
+    color: "#111827",
+    position: "relative",
+    x: 0,
+    y: 0,
+    width: "auto",
+    height: "auto"
+  },
   related: { settings: TextSettings },
 };

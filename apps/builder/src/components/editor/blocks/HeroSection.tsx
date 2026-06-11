@@ -9,6 +9,11 @@ interface HeroSectionProps {
   background?: string;
   paddingY?: number;
   imageSrc?: string;
+  position?: string;
+  x?: number;
+  y?: number;
+  width?: string | number;
+  height?: string | number;
 }
 
 export const HeroSectionSettings = () => {
@@ -75,7 +80,12 @@ export const HeroSectionSettings = () => {
 export const HeroSection = ({ 
   background = "#ffffff", 
   paddingY = 100,
-  imageSrc = "/doctor.png"
+  imageSrc = "/doctor.png",
+  position = "relative",
+  x = 0,
+  y = 0,
+  width = "100%",
+  height = "auto"
 }: HeroSectionProps) => {
   const { connectors: { connect, drag }, isSelected } = useNode((state) => ({
     isSelected: state.events.selected,
@@ -84,7 +94,13 @@ export const HeroSection = ({
   return (
     <div
       ref={(ref) => { connect(drag(ref as HTMLElement)); }}
-      style={{ background, outline: isSelected ? "2px solid #0066FF" : "none", outlineOffset: "-2px" }}
+      style={{ 
+        background, 
+        outline: isSelected ? "2px solid #0066FF" : "none", 
+        outlineOffset: "-2px",
+        width: position === "absolute" ? "100%" : width,
+        height: position === "absolute" ? "100%" : height,
+      }}
       className="w-full relative border-b border-[#E5E5E5] flex flex-col items-center select-none font-sans"
     >
       {/* 1. Header Navbar (Platinum Medical Clinic) */}
@@ -175,6 +191,11 @@ HeroSection.craft = {
     background: "#ffffff", 
     paddingY: 100,
     imageSrc: "/doctor.png",
+    position: "relative",
+    x: 0,
+    y: 0,
+    width: "100%",
+    height: "auto"
   },
   rules: { canDrag: () => true },
   related: { settings: HeroSectionSettings },

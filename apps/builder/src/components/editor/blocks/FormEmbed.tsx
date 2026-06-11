@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useNode } from "@craftjs/core";
+import { useNode, Element } from "@craftjs/core";
+import { Text } from "./Text";
 import { FileText, ChevronDown } from "lucide-react";
 
 export interface FormEmbedProps {
@@ -9,8 +10,6 @@ export interface FormEmbedProps {
   themeColor?: string;
   borderRadius?: number;
   formId?: string; // ID of the form to embed
-  title?: string;
-  subtitle?: string;
 }
 
 export const FormEmbedSettings = () => {
@@ -19,16 +18,12 @@ export const FormEmbedSettings = () => {
     margin, 
     themeColor, 
     borderRadius, 
-    formId,
-    title,
-    subtitle
+    formId
   } = useNode((node) => ({
     margin: node.data.props.margin,
     themeColor: node.data.props.themeColor,
     borderRadius: node.data.props.borderRadius,
     formId: node.data.props.formId,
-    title: node.data.props.title,
-    subtitle: node.data.props.subtitle,
   }));
 
   const [forms, setForms] = useState<any[]>([]);
@@ -70,7 +65,7 @@ export const FormEmbedSettings = () => {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 border-b border-gray-100 pb-4">
+      <div className="flex flex-col gap-3 pb-4">
         <h4 className="text-xs font-bold text-gray-700">Styling</h4>
         
         <div className="flex flex-col gap-2">
@@ -107,30 +102,6 @@ export const FormEmbedSettings = () => {
           </div>
         </div>
       </div>
-
-      <div className="flex flex-col gap-3">
-        <h4 className="text-xs font-bold text-gray-700">Text Content</h4>
-        
-        <div className="flex flex-col gap-2">
-          <label className={labelClass}>Embed Title</label>
-          <input 
-            type="text" 
-            value={title || ""} 
-            onChange={(e) => setProp((p: FormEmbedProps) => { p.title = e.target.value; })} 
-            className={inputClass}
-          />
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <label className={labelClass}>Embed Subtitle</label>
-          <input 
-            type="text" 
-            value={subtitle || ""} 
-            onChange={(e) => setProp((p: FormEmbedProps) => { p.subtitle = e.target.value; })} 
-            className={inputClass}
-          />
-        </div>
-      </div>
     </div>
   );
 };
@@ -140,8 +111,6 @@ export const FormEmbed = ({
   themeColor = "#4F46E5",
   borderRadius = 12,
   formId,
-  title = "Custom Form Embed",
-  subtitle = "Intake, feedback, or consent form",
   ...props
 }: FormEmbedProps) => {
   const {
@@ -218,12 +187,8 @@ export const FormEmbed = ({
             <FileText size={20} style={{ color: themeColor }} />
           </div>
           <div style={{ textAlign: "left" }}>
-            <h4 style={{ margin: 0, fontSize: "15px", fontWeight: "700", color: "#111827" }}>
-              {title}
-            </h4>
-            <p style={{ margin: 0, fontSize: "11px", color: "#6b7280" }}>
-              {subtitle}
-            </p>
+            <Element id="formTitle" is={Text} text="Custom Form Embed" fontSize={15} fontWeight="700" color="#111827" />
+            <Element id="formSubtitle" is={Text} text="Intake, feedback, or consent form" fontSize={11} color="#6b7280" />
           </div>
         </div>
 
@@ -294,8 +259,6 @@ FormEmbed.craft = {
     themeColor: "#4F46E5",
     borderRadius: 12,
     formId: "",
-    title: "Custom Form Embed",
-    subtitle: "Intake, feedback, or consent form"
   },
   rules: {
     canDrag: () => true,

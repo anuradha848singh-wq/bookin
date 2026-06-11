@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { T } from "../theme";
+import { getLoginUrl } from "../utils/env";
 
 export default function SolutionsPage() {
   const solutions = [
@@ -56,7 +56,7 @@ export default function SolutionsPage() {
               <div style={{ fontSize: 32, marginBottom: 16 }}>{s.icon}</div>
               <h3 style={{ fontSize: 20, fontWeight: 800, color: T.dark, fontFamily: "Outfit, sans-serif", marginBottom: 12 }}>{s.title}</h3>
               <p style={{ fontSize: 14.5, color: T.muted, lineHeight: 1.7, fontWeight: 500, marginBottom: 24 }}>{s.desc}</p>
-              <a href={process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL}/login` : "http://localhost:3002/login"} className="bk-btn-outline" style={{ padding: "8px 16px", fontSize: 13, border: `1.5px solid ${T.red}`, color: T.red }}>
+              <a href={getLoginUrl()} className="bk-btn-outline" style={{ padding: "8px 16px", fontSize: 13, border: `1.5px solid ${T.red}`, color: T.red }}>
                 Launch Solution Page &rarr;
               </a>
             </div>
