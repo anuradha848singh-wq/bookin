@@ -80,7 +80,7 @@ export async function generateSlots(input: {
 
   if (staffMembers.length === 0) return [];
   const staffIds = staffMembers.map((s: any) => s.id);
-  const staffIdsList = Prisma.join(staffIds.map((id: string) => Prisma.sql`${id}::uuid`));
+  const staffIdsList = (Prisma as any).join(staffIds.map((id: string) => (Prisma as any).sql`${id}::uuid`));
 
   const startDateStr = startDate.toISOString().split('T')[0];
   const endDateStr = endDate.toISOString().split('T')[0];

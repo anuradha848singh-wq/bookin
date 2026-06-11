@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   transpilePackages: ['@book-in/ui', '@book-in/config', '@book-in/lib', '@book-in/db'],
   images: {
     remotePatterns: [

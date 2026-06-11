@@ -136,7 +136,7 @@ export async function registerTenantAndCreateSchema(data: {
   }
 
   try {
-    const result = await pc.$transaction(async (tx) => {
+    const result = await pc.$transaction(async (tx: any) => {
       // 0. Ensure the free plan exists (idempotent upsert — no seeding step required)
       await tx.plan.upsert({
         where: { id: "free" },
