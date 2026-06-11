@@ -40,7 +40,7 @@ export const LeftPanel = ({
   activeSlug: string;
   onPageSwitch: (newSlug: string) => void;
 }) => {
-  const { connectors, nodesJson } = useEditor((state) => ({
+  const { connectors, actions, query, nodesJson } = useEditor((state) => ({
     nodesJson: JSON.stringify(
       Object.keys(state.nodes).reduce((acc: any, key) => {
         acc[key] = {
@@ -53,6 +53,22 @@ export const LeftPanel = ({
       2
     )
   }));
+
+  const handleAddClick = React.useCallback((element: React.ReactElement) => {
+    const node = query.parseReactElement(element).toNodeTree();
+    actions.addNodeTree(node, "ROOT");
+  }, [actions, query]);
+
+  const DraggableBlock = ({ element, icon, label }: { element: React.ReactElement, icon: React.ReactNode, label: string }) => {
+    return (
+      <div 
+        ref={(ref) => { if (ref) connectors.create(ref, element); }}
+        onClick={() => handleAddClick(element)}
+      >
+        <BlockItem icon={icon} label={label} />
+      </div>
+    );
+  };
 
   // Pages State
   const [pages, setPages] = React.useState<BuilderPageMeta[]>([]);
@@ -179,12 +195,8 @@ export const LeftPanel = ({
             <h4 className="builder-category-title">LAYOUT</h4>
             <div className="builder-block-grid">
               <BlockItem icon={<div style={{ width: 22, height: 22, border: '2px dashed currentColor', borderRadius: 3 }}></div>} label="Section" />
-              <div ref={(ref) => { connectors.create(ref as HTMLElement, <Element is={Container} padding={20} canvas />); }}>
-                <BlockItem icon={<div style={{ width: 22, height: 22, border: '2px dashed currentColor', borderRadius: 3, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ width: 10, height: 10, border: '2px dashed currentColor', borderRadius: 2 }}></div></div>} label="Container" />
-              </div>
-              <div ref={(ref) => { connectors.create(ref as HTMLElement, <Element is={ServicesGrid} canvas />); }}>
-                <BlockItem icon={<LayoutGrid size={24} strokeWidth={1.5} />} label="Grid" />
-              </div>
+              <DraggableBlock element={<Element is={Container} padding={20} canvas />} icon={<div style={{ width: 22, height: 22, border: '2px dashed currentColor', borderRadius: 3, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ width: 10, height: 10, border: '2px dashed currentColor', borderRadius: 2 }}></div></div>} label="Container" />
+              <DraggableBlock element={<Element is={ServicesGrid} canvas />} icon={<LayoutGrid size={24} strokeWidth={1.5} />} label="Grid" />
               <BlockItem icon={<SlidersHorizontal size={24} strokeWidth={1.5} />} label="Stack" />
             </div>
           </div>
@@ -193,30 +205,14 @@ export const LeftPanel = ({
           <div>
             <h4 className="builder-category-title">BASIC</h4>
             <div className="builder-block-grid">
-              <div ref={(ref) => { connectors.create(ref as HTMLElement, <Element is={Text} text="Text Block" />); }}>
-                <BlockItem icon={<span style={{ fontFamily: 'serif', fontSize: 26, lineHeight: 1 }}>A</span>} label="Text" />
-              </div>
-              <div ref={(ref) => { connectors.create(ref as HTMLElement, <Element is={Text} text="Heading" fontSize={32} fontWeight="bold" />); }}>
-                <BlockItem icon={<span style={{ fontFamily: 'serif', fontSize: 26, lineHeight: 1 }}>H</span>} label="Heading" />
-              </div>
-              <div ref={(ref) => { connectors.create(ref as HTMLElement, <Element is={Button} text="Button" />); }}>
-                <BlockItem icon={<div style={{ width: 26, height: 14, borderRadius: 999, border: '2px solid currentColor', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}><Link size={10} strokeWidth={2.5} style={{ position: 'absolute', backgroundColor: '#fff', padding: '0 2px' }} /></div>} label="Button" />
-              </div>
-              <div ref={(ref) => { connectors.create(ref as HTMLElement, <Element is={Image} canvas />); }}>
-                <BlockItem icon={<ImageIcon size={24} strokeWidth={1.5} />} label="Image" />
-              </div>
-              <div ref={(ref) => { connectors.create(ref as HTMLElement, <Element is={Icon} canvas />); }}>
-                <BlockItem icon={<Star size={24} strokeWidth={1.5} />} label="Icon" />
-              </div>
-              <div ref={(ref) => { connectors.create(ref as HTMLElement, <Element is={Divider} canvas />); }}>
-                <BlockItem icon={<Minus size={24} strokeWidth={1.5} />} label="Divider" />
-              </div>
-              <div ref={(ref) => { connectors.create(ref as HTMLElement, <Element is={Spacer} canvas />); }}>
-                <BlockItem icon={<ArrowUpDown size={24} strokeWidth={1.5} />} label="Spacer" />
-              </div>
-              <div ref={(ref) => { connectors.create(ref as HTMLElement, <Element is={Video} canvas />); }}>
-                <BlockItem icon={<PlaySquare size={24} strokeWidth={1.5} />} label="Video" />
-              </div>
+              <DraggableBlock element={<Element is={Text} text="Text Block" />} icon={<span style={{ fontFamily: 'serif', fontSize: 26, lineHeight: 1 }}>A</span>} label="Text" />
+              <DraggableBlock element={<Element is={Text} text="Heading" fontSize={32} fontWeight="bold" />} icon={<span style={{ fontFamily: 'serif', fontSize: 26, lineHeight: 1 }}>H</span>} label="Heading" />
+              <DraggableBlock element={<Element is={Button} text="Button" />} icon={<div style={{ width: 26, height: 14, borderRadius: 999, border: '2px solid currentColor', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}><Link size={10} strokeWidth={2.5} style={{ position: 'absolute', backgroundColor: '#fff', padding: '0 2px' }} /></div>} label="Button" />
+              <DraggableBlock element={<Element is={Image} canvas />} icon={<ImageIcon size={24} strokeWidth={1.5} />} label="Image" />
+              <DraggableBlock element={<Element is={Icon} canvas />} icon={<Star size={24} strokeWidth={1.5} />} label="Icon" />
+              <DraggableBlock element={<Element is={Divider} canvas />} icon={<Minus size={24} strokeWidth={1.5} />} label="Divider" />
+              <DraggableBlock element={<Element is={Spacer} canvas />} icon={<ArrowUpDown size={24} strokeWidth={1.5} />} label="Spacer" />
+              <DraggableBlock element={<Element is={Video} canvas />} icon={<PlaySquare size={24} strokeWidth={1.5} />} label="Video" />
             </div>
           </div>
 
@@ -226,26 +222,14 @@ export const LeftPanel = ({
             <div className="builder-block-grid">
               <BlockItem icon={<LayoutGrid size={24} strokeWidth={1.5} />} label="Gallery" />
               <BlockItem icon={<MonitorPlay size={24} strokeWidth={1.5} />} label="Slider" />
-              <div ref={(ref) => { connectors.create(ref as HTMLElement, <Element is={FormEmbed as any} canvas />); }}>
-                <BlockItem icon={<FileText size={24} strokeWidth={1.5} />} label="Form" />
-              </div>
+              <DraggableBlock element={<Element is={FormEmbed as any} canvas />} icon={<FileText size={24} strokeWidth={1.5} />} label="Form" />
               <BlockItem icon={<MapPin size={24} strokeWidth={1.5} />} label="Map" />
               <BlockItem icon={<Table size={24} strokeWidth={1.5} />} label="Table" />
-              <div ref={(ref) => { connectors.create(ref as HTMLElement, <Element is={Tabs as any} canvas />); }}>
-                <BlockItem icon={<FileText size={24} strokeWidth={1.5} />} label="Tabs" />
-              </div>
-              <div ref={(ref) => { connectors.create(ref as HTMLElement, <Element is={Accordion} canvas />); }}>
-                <BlockItem icon={<AlignJustify size={24} strokeWidth={1.5} />} label="Accordion" />
-              </div>
-              <div ref={(ref) => { connectors.create(ref as HTMLElement, <Element is={Modal as any} canvas />); }}>
-                <BlockItem icon={<LayoutGrid size={24} strokeWidth={1.5} />} label="Modal" />
-              </div>
-              <div ref={(ref) => { connectors.create(ref as HTMLElement, <Toggle />); }}>
-                <BlockItem icon={<ToggleLeft size={24} strokeWidth={1.5} />} label="Toggle" />
-              </div>
-              <div ref={(ref) => { connectors.create(ref as HTMLElement, <Element is={Dropdown as any} canvas />); }}>
-                <BlockItem icon={<Menu size={24} strokeWidth={1.5} />} label="Dropdown" />
-              </div>
+              <DraggableBlock element={<Element is={Tabs as any} canvas />} icon={<FileText size={24} strokeWidth={1.5} />} label="Tabs" />
+              <DraggableBlock element={<Element is={Accordion} canvas />} icon={<AlignJustify size={24} strokeWidth={1.5} />} label="Accordion" />
+              <DraggableBlock element={<Element is={Modal as any} canvas />} icon={<LayoutGrid size={24} strokeWidth={1.5} />} label="Modal" />
+              <DraggableBlock element={<Toggle />} icon={<ToggleLeft size={24} strokeWidth={1.5} />} label="Toggle" />
+              <DraggableBlock element={<Element is={Dropdown as any} canvas />} icon={<Menu size={24} strokeWidth={1.5} />} label="Dropdown" />
             </div>
           </div>
 
@@ -253,16 +237,10 @@ export const LeftPanel = ({
           <div>
             <h4 className="builder-category-title">BOOKING</h4>
             <div className="builder-block-grid">
-              <div ref={(ref) => { connectors.create(ref as HTMLElement, <Element is={BookingWidgetBlock} canvas />); }}>
-                <BlockItem icon={<CalendarDays size={24} strokeWidth={1.5} />} label="Booking Widget" />
-              </div>
-              <div ref={(ref) => { connectors.create(ref as HTMLElement, <Element is={ServiceShowcase} canvas />); }}>
-                <BlockItem icon={<MonitorPlay size={24} strokeWidth={1.5} />} label="Services" />
-              </div>
+              <DraggableBlock element={<Element is={BookingWidgetBlock} canvas />} icon={<CalendarDays size={24} strokeWidth={1.5} />} label="Booking Widget" />
+              <DraggableBlock element={<Element is={ServiceShowcase} canvas />} icon={<MonitorPlay size={24} strokeWidth={1.5} />} label="Services" />
               <BlockItem icon={<CalendarDays size={24} strokeWidth={1.5} />} label="Availability" />
-              <div ref={(ref) => { connectors.create(ref as HTMLElement, <Element is={StaffShowcase} canvas />); }}>
-                <BlockItem icon={<Users size={24} strokeWidth={1.5} />} label="Staff List" />
-              </div>
+              <DraggableBlock element={<Element is={StaffShowcase} canvas />} icon={<Users size={24} strokeWidth={1.5} />} label="Staff List" />
             </div>
           </div>
 
