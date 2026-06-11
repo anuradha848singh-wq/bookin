@@ -17,8 +17,8 @@ export const Navbar = () => (
       <Link href="/company" className="bk-nav-link">Company <Chev /></Link>
     </div>
     <div className="bk-nav-right">
-      <a href="http://localhost:3002/login" className="bk-btn-ghost">Sign in</a>
-      <a href="http://localhost:3002/login" className="bk-btn-red">Try Bookin Free <Arr /></a>
+      <a href={process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL}/login` : "http://localhost:3002/login"} className="bk-btn-ghost">Sign in</a>
+      <a href={process.env.NEXT_PUBLIC_SITE_URL ? `${process.env.NEXT_PUBLIC_SITE_URL}/login` : "http://localhost:3002/login"} className="bk-btn-red">Try Bookin Free <Arr /></a>
     </div>
   </nav>
 );

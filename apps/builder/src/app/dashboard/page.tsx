@@ -32,7 +32,7 @@ export default function DashboardPage() {
       try {
         // Attempt to fetch from the shared dashboard API if accessible (CORS permitting), 
         // otherwise default to a demo site.
-        const res = await fetch("http://localhost:3000/api/studio/pages");
+        const res = await fetch("/api/studio/pages");
         if (res.ok) {
           const data = await res.json();
           setSites(data.pages || []);
