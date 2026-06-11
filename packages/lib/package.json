@@ -11,7 +11,8 @@
     "./supabase": "./dist/supabase.js",
     "./redis": "./dist/redis.js",
     "./logger": "./dist/logger.js",
-    "./compiler": "./dist/compiler.js"
+    "./compiler": "./dist/compiler.js",
+    "./env": "./dist/env.js"
   },
   "scripts": {
     "build": "tsc",

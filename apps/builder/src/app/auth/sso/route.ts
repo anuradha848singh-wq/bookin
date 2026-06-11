@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { getPublicClient } from "@book-in/db";
-const prisma = getPublicClient();
+import { getBuilderUrl } from "@book-in/lib/env";
 import { createClient } from "@supabase/supabase-js";
+
+const prisma = getPublicClient();
 
 export const dynamic = "force-dynamic";
 
@@ -55,7 +57,7 @@ export async function GET(request: Request) {
       type: "magiclink",
       email: ssoToken.studioUser.email,
       options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_STUDIO_URL || "http://localhost:3001"}${ssoToken.redirectPath}`,
+        redirectTo: `${getBuilderUrl()}${ssoToken.redirectPath}`,
       },
     });
 

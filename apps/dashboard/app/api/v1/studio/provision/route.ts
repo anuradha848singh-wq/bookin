@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { withTenantAuth } from "@/lib/api-middleware";
+import { getBuilderUrl } from "@book-in/lib/env";
 
 export const POST = withTenantAuth(async (request, { tenant, user }) => {
-  const STUDIO_API_URL = process.env.NEXT_PUBLIC_STUDIO_URL || "http://localhost:3001";
+  const STUDIO_API_URL = getBuilderUrl();
   const STUDIO_API_SECRET = process.env.STUDIO_API_SECRET;
 
   if (!STUDIO_API_SECRET) {

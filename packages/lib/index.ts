@@ -11,3 +11,4 @@ export * from "./src/auth/rbac";
 export * from "./src/auth/require-ownership";
 export * from "./src/security/rate-limit";
 export * from "./src/security/sanitize";
+export * from "./env";

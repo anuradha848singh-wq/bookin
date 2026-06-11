@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getDashboardUrl } from "@book-in/lib/env";
+import { headers } from "next/headers";
 import { getTenantClient, getPublicClient } from "@book-in/db";
 
 export const dynamic = "force-dynamic";
@@ -214,7 +216,7 @@ export async function POST(request: NextRequest) {
 
     // 9. Fire event bus for automations (booking.created)
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_DASHBOARD_URL || "http://localhost:3000";
+      const baseUrl = getDashboardUrl() || "http://localhost:3002";
       await fetch(`${baseUrl}/api/v1/internal/event-bus`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
