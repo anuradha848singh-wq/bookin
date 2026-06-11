@@ -5,12 +5,14 @@ export const getDashboardUrl = () => {
   if (process.env.NEXT_PUBLIC_SITE_URL) {
     return process.env.NEXT_PUBLIC_SITE_URL;
   }
-  if (process.env.NEXT_PUBLIC_VERCEL_URL) {
-    // If deployed on Vercel without env vars, guess the dashboard URL
-    // This is a fallback to prevent localhost links in production
-    return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
+  
+  // In development, the dashboard runs on port 3002
+  if (process.env.NODE_ENV === "development") {
+    return "http://localhost:3002";
   }
-  return "http://localhost:3002";
+
+  // In production monorepo deployment (single domain), use relative paths
+  return "";
 };
 
 export const getLoginUrl = () => {
