@@ -106,7 +106,7 @@ export default function OnboardingClient() {
     try {
       setCurrentAction("Instantiating isolated PostgreSQL schema...");
       setProvisionProgress(25);
-      const provRes = await fetch("/api/internal/provision-clinic", {
+      const provRes = await fetch("/api/v1/internal/provision-clinic", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ clinicName: clinicName.trim() }),
@@ -116,7 +116,7 @@ export default function OnboardingClient() {
 
       setCurrentAction("Configuring clinic operational hours...");
       setProvisionProgress(50);
-      const availRes = await fetch("/api/dashboard/availability", {
+      const availRes = await fetch("/api/v1/availability", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -135,7 +135,7 @@ export default function OnboardingClient() {
       let serviceId = null;
       for (const service of servicesList) {
         if (!service.name.trim()) continue;
-        const sRes = await fetch("/api/dashboard/services", {
+        const sRes = await fetch("/api/v1/catalog/services", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
