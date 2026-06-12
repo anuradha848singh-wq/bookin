@@ -23,28 +23,34 @@ export default async function ClientProfilePage({
   const clientId = params.id;
 
   // 1. Fetch Client Profile
-  const clients = await tenantDb.$queryRawUnsafe(`
-    SELECT * FROM clients WHERE id = $1::uuid AND deleted_at IS NULL LIMIT 1;
-  `, clientId) as any[];
+  const client = await tenantDb.client.findFirst({
+    where: { id: clientId, deleted_at: null }
+  });
 
-  if (clients.length === 0) redirect("/crm");
-  const client = clients[0];
+  if (!client) redirect("/crm");
 
   // 2. Fetch Timeline (Notes + Activities)
-  const notes = await tenantDb.$queryRawUnsafe(`
-    SELECT n.*, s.first_name as staff_first_name, s.last_name as staff_last_name 
-    FROM client_notes n LEFT JOIN staff s ON n.staff_id = s.id
-    WHERE n.client_id = $1::uuid ORDER BY n.created_at DESC LIMIT 20;
-  `, clientId) as any[];
+  const notes = await tenantDb.clientNote.findMany({
+    where: { client_id: clientId },
+    include: { staff: { select: { first_name: true, last_name: true } } },
+    orderBy: { created_at: 'desc' },
+    take: 20
+  });
 
-  const activities = await tenantDb.$queryRawUnsafe(`
-    SELECT * FROM client_activities WHERE client_id = $1::uuid ORDER BY created_at DESC LIMIT 20;
-  `, clientId) as any[];
+  const activities = await tenantDb.clientActivity.findMany({
+    where: { client_id: clientId },
+    orderBy: { created_at: 'desc' },
+    take: 20
+  });
 
   // 3. Sort Timeline chronologically
   const timeline = [
-    ...notes.map(n => ({ type: 'NOTE', date: new Date(n.created_at), data: n })),
-    ...activities.map(a => ({ type: 'ACTIVITY', date: new Date(a.created_at), data: a }))
+    ...notes.map((n: any) => ({ 
+      type: 'NOTE', 
+      date: new Date(n.created_at), 
+      data: { ...n, staff_first_name: n.staff?.first_name, staff_last_name: n.staff?.last_name } 
+    })),
+    ...activities.map((a: any) => ({ type: 'ACTIVITY', date: new Date(a.created_at), data: a }))
   ].sort((a, b) => b.date.getTime() - a.date.getTime());
 
   return (

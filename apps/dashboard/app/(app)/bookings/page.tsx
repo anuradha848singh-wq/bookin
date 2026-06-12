@@ -18,17 +18,25 @@ export default async function BookingsPage() {
 
   const tenantDb = getTenantClient(`tenant_${tenant.slug}`) as any;
   
-  const bookings = await tenantDb.$queryRawUnsafe(`
-    SELECT b.*, 
-           c.first_name as client_first_name, c.last_name as client_last_name,
-           s.name as service_name, s.price as service_price,
-           st.first_name as staff_first_name, st.last_name as staff_last_name
-    FROM bookings b
-    LEFT JOIN clients c ON b.client_id = c.id
-    LEFT JOIN services s ON b.service_id = s.id
-    LEFT JOIN staff st ON b.staff_id = st.id
-    ORDER BY b.starts_at DESC LIMIT 50;
-  `) as any[];
+  const rawBookings = await tenantDb.booking.findMany({
+    include: {
+      client: { select: { first_name: true, last_name: true } },
+      service: { select: { name: true, price: true } },
+      staff: { select: { first_name: true, last_name: true } }
+    },
+    orderBy: { starts_at: 'desc' },
+    take: 50
+  });
+
+  const bookings = rawBookings.map((b: any) => ({
+    ...b,
+    client_first_name: b.client?.first_name,
+    client_last_name: b.client?.last_name,
+    service_name: b.service?.name,
+    service_price: b.service?.price,
+    staff_first_name: b.staff?.first_name,
+    staff_last_name: b.staff?.last_name
+  }));
 
   return (
     <div className="flex h-full flex-col space-y-6 p-8 bg-gray-50/50 min-h-screen">
@@ -69,7 +77,7 @@ export default async function BookingsPage() {
                   </td>
                 </tr>
               ) : (
-                bookings.map((booking) => {
+                bookings.map((booking: any) => {
                   const d = new Date(booking.starts_at);
                   return (
                     <tr key={booking.id} className="hover:bg-blue-50/50 transition-colors group">

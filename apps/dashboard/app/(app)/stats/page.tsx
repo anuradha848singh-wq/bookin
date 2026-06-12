@@ -25,106 +25,83 @@ export default async function StatsPage() {
 
   const tenantDb = getTenantClient(`tenant_${clinic.slug}`) as any;
 
-  // 1. Fetch total counts in parallel
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+  const startOfMonth = new Date(currentYear, currentMonth, 1, 0, 0, 0);
+  const endOfMonth = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59, 999);
+
+  // 1. Fetch aggregations using SQL
   const [
-    totalBookings,
-    confirmedBookings,
-    pendingBookings,
-    cancelledBookings,
-    servicesCount
+    totalResult,
+    statusResult,
+    servicesCountResult,
+    revenueResult,
+    serviceDistributionResult,
+    dailyCountsResult,
+    weekdayDistributionResult
   ] = await Promise.all([
-    tenantDb.booking.count(),
-    tenantDb.booking.count({ where: { status: "CONFIRMED" } }),
-    tenantDb.booking.count({ where: { status: "PENDING" } }),
-    tenantDb.booking.count({ where: { status: "CANCELLED" } }),
-    tenantDb.service.count()
+    tenantDb.$queryRaw`SELECT COUNT(*) as count FROM bookings`,
+    tenantDb.$queryRaw`SELECT status, COUNT(*) as count FROM bookings GROUP BY status`,
+    tenantDb.$queryRaw`SELECT COUNT(*) as count FROM services WHERE deleted_at IS NULL`,
+    tenantDb.$queryRaw`SELECT SUM(price) as total FROM bookings WHERE status IN ('CONFIRMED', 'COMPLETED')`,
+    tenantDb.$queryRaw`
+      SELECT s.name, COUNT(b.id) as count 
+      FROM bookings b 
+      JOIN services s ON b.service_id = s.id 
+      GROUP BY s.name 
+      ORDER BY count DESC
+    `,
+    tenantDb.$queryRaw`
+      SELECT EXTRACT(DAY FROM starts_at) as day, COUNT(*) as count 
+      FROM bookings 
+      WHERE starts_at >= ${startOfMonth} AND starts_at <= ${endOfMonth} 
+      GROUP BY day
+    `,
+    tenantDb.$queryRaw`
+      SELECT EXTRACT(DOW FROM starts_at) as dow, COUNT(*) as count 
+      FROM bookings 
+      GROUP BY dow
+    `
   ]);
 
-  // 2. Fetch only necessary fields for revenue and distributions
-  const bookingsData = await tenantDb.booking.findMany({
-    where: {},
-    select: {
-      status: true,
-      starts_at: true,
-      price: true,
-      service: {
-        select: {
-          name: true
-        }
-      }
-    }
+  const totalBookings = Number((totalResult as any)[0]?.count || 0);
+  const servicesCount = Number((servicesCountResult as any)[0]?.count || 0);
+  const totalRevenue = Number((revenueResult as any)[0]?.total || 0);
+
+  let confirmedBookings = 0;
+  let pendingBookings = 0;
+  let cancelledBookings = 0;
+
+  (statusResult as any[]).forEach((row) => {
+    const count = Number(row.count);
+    if (row.status === 'CONFIRMED') confirmedBookings = count;
+    if (row.status === 'PENDING') pendingBookings = count;
+    if (row.status === 'CANCELLED') cancelledBookings = count;
   });
 
-  // 3. Compute stats in server memory
-  let totalRevenue = 0;
-  const serviceCounts: { [name: string]: number } = {};
-  const weekdayCounts: { [day: string]: number } = {
-    "Mon": 0, "Tue": 0, "Wed": 0, "Thu": 0, "Fri": 0, "Sat": 0, "Sun": 0
-  };
-
-  bookingsData.forEach((b: any) => {
-    if (!b.service) return;
-    const sName = b.service.name;
-    const sPrice = parseFloat(b.price || "0");
-
-    if (b.status === "CONFIRMED") {
-      totalRevenue += sPrice;
-    }
-
-    // Count popular services
-    serviceCounts[sName] = (serviceCounts[sName] || 0) + 1;
-
-    // Count weekday distributions
-    const date = new Date(b.starts_at);
-    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const dayName = days[date.getDay()];
-    if (dayName) {
-      weekdayCounts[dayName] = (weekdayCounts[dayName] || 0) + 1;
-    }
-  });
-
-  // Find most popular service
-  let popularService = "N/A";
-  let maxCount = 0;
-  Object.entries(serviceCounts).forEach(([name, count]) => {
-    if (count > maxCount) {
-      maxCount = count;
-      popularService = name;
-    }
-  });
-
-  // Compute popular services list for dashboard card
-  const popularServicesList = Object.entries(serviceCounts)
-    .map(([name, n]) => ({
-      name,
-      n,
-      pct: Math.round((n / (totalBookings || 1)) * 100)
+  const popularServicesList = (serviceDistributionResult as any[])
+    .map((row) => ({
+      name: row.name,
+      n: Number(row.count),
+      pct: Math.round((Number(row.count) / (totalBookings || 1)) * 100)
     }))
-    .sort((a: { n: number }, b: { n: number }) => b.n - a.n)
     .slice(0, 5);
 
+  const popularService = popularServicesList.length > 0 ? popularServicesList[0]?.name ?? "N/A" : "N/A";
+  const maxCount = popularServicesList.length > 0 ? popularServicesList[0]?.n ?? 0 : 0;
+
   // Compute areaData dynamically for current month
-  const now = new Date();
-  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const monthName = now.toLocaleString("en-US", { month: "short" });
 
   const dailyCounts = Array.from({ length: daysInMonth }, (_, idx) => {
     const dayNum = idx + 1;
+    const found = (dailyCountsResult as any[]).find((r) => Number(r.day) === dayNum);
     return {
       x: `${monthName} ${dayNum}`,
-      v: 0
+      v: found ? Number(found.count) : 0
     };
-  });
-
-  bookingsData.forEach((b: any) => {
-    if (!b.starts_at) return;
-    const bDate = new Date(b.starts_at);
-    if (bDate.getMonth() === now.getMonth() && bDate.getFullYear() === now.getFullYear()) {
-      const dayIdx = bDate.getDate() - 1;
-      if (dayIdx >= 0 && dayIdx < dailyCounts.length && dailyCounts[dayIdx]) {
-        dailyCounts[dayIdx].v += 1;
-      }
-    }
   });
 
   // Compute xTicks for axis markings
@@ -148,6 +125,19 @@ export default async function StatsPage() {
   ];
 
   // Compute weeklyDistribution bars
+  const weekdayMap: { [key: number]: string } = {
+    0: "Sun", 1: "Mon", 2: "Tue", 3: "Wed", 4: "Thu", 5: "Fri", 6: "Sat"
+  };
+  
+  const weekdayCounts: { [day: string]: number } = {
+    "Mon": 0, "Tue": 0, "Wed": 0, "Thu": 0, "Fri": 0, "Sat": 0, "Sun": 0
+  };
+
+  (weekdayDistributionResult as any[]).forEach((row) => {
+    const dowStr = weekdayMap[Number(row.dow)];
+    if (dowStr) weekdayCounts[dowStr] = Number(row.count);
+  });
+
   const maxDayCount = Math.max(...Object.values(weekdayCounts), 1);
   const weeklyDistribution = Object.entries(weekdayCounts).map(([day, count]) => ({
     day,

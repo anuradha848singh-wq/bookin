@@ -46,18 +46,14 @@ export async function POST(request: NextRequest) {
     const tenantDb = getTenantClient(`tenant_${clinic.slug}`) as any;
 
     // 1. Fetch service details
-    const services = (await tenantDb.$queryRawUnsafe(`
-      SELECT id, name, duration_minutes, buffer_before_minutes, buffer_after_minutes, price, requires_deposit, deposit_amount
-      FROM services
-      WHERE id = $1::uuid AND is_public = true AND deleted_at IS NULL
-      LIMIT 1;
-    `, serviceId)) as any[];
+    const service = await tenantDb.service.findFirst({
+      where: { id: serviceId, is_public: true, deleted_at: null },
+      select: { id: true, name: true, duration_minutes: true, buffer_before_minutes: true, buffer_after_minutes: true, price: true, requires_deposit: true, deposit_amount: true }
+    });
 
-    if (!services.length) {
+    if (!service) {
       return NextResponse.json({ success: false, error: "Service not found or not available" }, { status: 404 });
     }
-
-    const service = services[0];
     const duration = parseInt(service.duration_minutes) || 30;
     const bufBefore = parseInt(service.buffer_before_minutes) || 0;
     const bufAfter = parseInt(service.buffer_after_minutes) || 0;
@@ -74,23 +70,24 @@ export async function POST(request: NextRequest) {
       const checkStart = new Date(startsAt.getTime() - bufBefore * 60 * 1000);
       const checkEnd = new Date(endsAt.getTime() + bufAfter * 60 * 1000);
 
-      const availableStaff = (await tenantDb.$queryRawUnsafe(`
+      const { Prisma } = await import('@prisma/client');
+      const availableStaff = (await tenantDb.$queryRaw(Prisma.sql`
         SELECT s.id
         FROM staff s
         INNER JOIN staff_services ss ON ss.staff_id = s.id
-        WHERE ss.service_id = $1::uuid
+        WHERE ss.service_id = ${serviceId}::uuid
           AND s.is_accepting_bookings = true
           AND s.deleted_at IS NULL
           AND s.id NOT IN (
             SELECT b.staff_id FROM bookings b
             WHERE b.staff_id IS NOT NULL
               AND b.status NOT IN ('CANCELLED', 'NO_SHOW')
-              AND (b.starts_at - (b.buffer_before || ' minutes')::interval) < $3::timestamptz
-              AND (b.ends_at + (b.buffer_after || ' minutes')::interval) > $2::timestamptz
+              AND (b.starts_at - (b.buffer_before || ' minutes')::interval) < ${checkEnd.toISOString()}::timestamptz
+              AND (b.ends_at + (b.buffer_after || ' minutes')::interval) > ${checkStart.toISOString()}::timestamptz
           )
         ORDER BY RANDOM()
         LIMIT 1;
-      `, serviceId, checkStart.toISOString(), checkEnd.toISOString())) as any[];
+      `)) as any[];
 
       if (availableStaff.length > 0) {
         assignedStaffId = availableStaff[0].id;
@@ -100,14 +97,15 @@ export async function POST(request: NextRequest) {
       const checkStart = new Date(startsAt.getTime() - bufBefore * 60 * 1000);
       const checkEnd = new Date(endsAt.getTime() + bufAfter * 60 * 1000);
 
-      const conflicts = (await tenantDb.$queryRawUnsafe(`
+      const { Prisma } = await import('@prisma/client');
+      const conflicts = (await tenantDb.$queryRaw(Prisma.sql`
         SELECT id FROM bookings
-        WHERE staff_id = $1::uuid
+        WHERE staff_id = ${assignedStaffId}::uuid
           AND status NOT IN ('CANCELLED', 'NO_SHOW')
-          AND (starts_at - (buffer_before || ' minutes')::interval) < $3::timestamptz
-          AND (ends_at + (buffer_after || ' minutes')::interval) > $2::timestamptz
+          AND (starts_at - (buffer_before || ' minutes')::interval) < ${checkEnd.toISOString()}::timestamptz
+          AND (ends_at + (buffer_after || ' minutes')::interval) > ${checkStart.toISOString()}::timestamptz
         LIMIT 1;
-      `, assignedStaffId, checkStart.toISOString(), checkEnd.toISOString())) as any[];
+      `)) as any[];
 
       if (conflicts.length > 0) {
         return NextResponse.json(
@@ -119,35 +117,42 @@ export async function POST(request: NextRequest) {
 
     // 5. Find or create the client record
     let clientId: string;
-    const existingClients = (await tenantDb.$queryRawUnsafe(`
-      SELECT id FROM clients
-      WHERE email = $1 AND deleted_at IS NULL
-      LIMIT 1;
-    `, email.toLowerCase().trim())) as any[];
+    const existingClient = await tenantDb.client.findFirst({
+      where: { email: email.toLowerCase().trim(), deleted_at: null },
+      select: { id: true, first_name: true, last_name: true, phone: true }
+    });
 
-    if (existingClients.length > 0) {
-      clientId = existingClients[0].id;
+    if (existingClient) {
+      clientId = existingClient.id;
       // Update contact info & visit metrics
-      await tenantDb.$executeRawUnsafe(`
-        UPDATE clients
-        SET first_name = COALESCE(NULLIF($2, ''), first_name),
-            last_name = COALESCE(NULLIF($3, ''), last_name),
-            phone = COALESCE(NULLIF($4, ''), phone),
-            visit_count = visit_count + 1,
-            lifetime_value = lifetime_value + $5,
-            last_visit_at = NOW(),
-            updated_at = NOW()
-        WHERE id = $1::uuid;
-      `, clientId, firstName, lastName, phone, service.price || 0);
+      await tenantDb.client.update({
+        where: { id: clientId },
+        data: {
+          first_name: firstName || existingClient.first_name,
+          last_name: lastName || existingClient.last_name,
+          phone: phone || existingClient.phone,
+          visit_count: { increment: 1 },
+          lifetime_value: { increment: service.price || 0 },
+          last_visit_at: new Date()
+        }
+      });
     } else {
       // Create new client
-      const newClients = (await tenantDb.$queryRawUnsafe(`
-        INSERT INTO clients (first_name, last_name, email, phone, source, visit_count, lifetime_value, last_visit_at)
-        VALUES ($1, $2, $3, $4, 'BOOKING_PORTAL', 1, $5, NOW())
-        RETURNING id;
-      `, firstName, lastName, email.toLowerCase().trim(), phone, service.price || 0)) as any[];
+      const newClient = await tenantDb.client.create({
+        data: {
+          first_name: firstName,
+          last_name: lastName,
+          email: email.toLowerCase().trim(),
+          phone,
+          source: 'BOOKING_PORTAL',
+          visit_count: 1,
+          lifetime_value: service.price || 0,
+          last_visit_at: new Date()
+        },
+        select: { id: true }
+      });
 
-      clientId = newClients[0].id;
+      clientId = newClient.id;
     }
 
     // 6. Generate booking reference number
@@ -159,13 +164,14 @@ export async function POST(request: NextRequest) {
     const checkStartForInsert = new Date(startsAt.getTime() - bufBefore * 60 * 1000);
     const checkEndForInsert = new Date(endsAt.getTime() + bufAfter * 60 * 1000);
 
-    const newBooking = (await tenantDb.$queryRawUnsafe(`
+    const { Prisma } = await import('@prisma/client');
+    const newBooking = (await tenantDb.$queryRaw(Prisma.sql`
       WITH overlapping AS (
         SELECT 1 FROM bookings
-        WHERE staff_id = $4::uuid
+        WHERE staff_id = ${assignedStaffId ? assignedStaffId : null}::uuid
           AND status NOT IN ('CANCELLED', 'NO_SHOW')
-          AND (starts_at - (COALESCE(buffer_before, 0) || ' minutes')::interval) < $13::timestamptz
-          AND (ends_at + (COALESCE(buffer_after, 0) || ' minutes')::interval) > $12::timestamptz
+          AND (starts_at - (COALESCE(buffer_before, 0) || ' minutes')::interval) < ${checkEndForInsert.toISOString()}::timestamptz
+          AND (ends_at + (COALESCE(buffer_after, 0) || ' minutes')::interval) > ${checkStartForInsert.toISOString()}::timestamptz
       )
       INSERT INTO bookings (
         reference_number, client_id, service_id, staff_id,
@@ -173,26 +179,12 @@ export async function POST(request: NextRequest) {
         price, status, payment_status, notes, source, created_by
       ) 
       SELECT 
-        $1, $2::uuid, $3::uuid, $4::uuid,
-        $5::timestamptz, $6::timestamptz, $7, $8, $9,
-        $10, 'PENDING', 'UNPAID', $11, 'BOOKING_PORTAL', 'CLIENT'
+        ${referenceNumber}, ${clientId}::uuid, ${serviceId}::uuid, ${assignedStaffId ? assignedStaffId : null}::uuid,
+        ${startsAt.toISOString()}::timestamptz, ${endsAt.toISOString()}::timestamptz, ${duration}, ${bufBefore}, ${bufAfter},
+        ${service.price || 0}, 'PENDING', 'UNPAID', ${notes}, 'BOOKING_PORTAL', 'CLIENT'
       WHERE NOT EXISTS (SELECT 1 FROM overlapping)
       RETURNING *;
-    `,
-      referenceNumber,
-      clientId,
-      serviceId,
-      assignedStaffId || null,
-      startsAt.toISOString(),
-      endsAt.toISOString(),
-      duration,
-      bufBefore,
-      bufAfter,
-      service.price || 0,
-      notes,
-      checkStartForInsert.toISOString(),
-      checkEndForInsert.toISOString()
-    )) as any[];
+    `)) as any[];
 
     if (newBooking.length === 0) {
       return NextResponse.json(
@@ -204,15 +196,15 @@ export async function POST(request: NextRequest) {
     const booking = newBooking[0];
 
     // 8. Log client activity
-    await tenantDb.$executeRawUnsafe(`
-      INSERT INTO client_activities (client_id, type, title, description, link_id)
-      VALUES ($1::uuid, 'BOOKING_CREATED', $2, $3, $4::uuid);
-    `,
-      clientId,
-      `Booking for ${service.name}`,
-      `Booked on ${date} at ${time}. Ref: ${referenceNumber}`,
-      booking.id
-    );
+    await tenantDb.clientActivity.create({
+      data: {
+        client_id: clientId,
+        type: 'BOOKING_CREATED',
+        title: `Booking for ${service.name}`,
+        description: `Booked on ${date} at ${time}. Ref: ${referenceNumber}`,
+        link_id: booking.id
+      }
+    });
 
     // 9. Fire event bus for automations (booking.created)
     try {

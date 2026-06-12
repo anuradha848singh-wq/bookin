@@ -12,18 +12,16 @@ export const POST = withTenantAuth(async (request, { tenantDb }) => {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const newAutomation = await tenantDb.$queryRawUnsafe(`
-      INSERT INTO automations (name, trigger_event, conditions, actions)
-      VALUES ($1, $2, $3::jsonb, $4::jsonb)
-      RETURNING *;
-    `, 
-      name, 
-      trigger_event, 
-      JSON.stringify(conditions || []), 
-      JSON.stringify(actions)
-    );
+    const newAutomation = await tenantDb.automation.create({
+      data: {
+        name,
+        trigger_event,
+        conditions: conditions || [],
+        actions
+      }
+    });
 
-    return NextResponse.json({ success: true, automation: (newAutomation as any)[0] });
+    return NextResponse.json({ success: true, automation: newAutomation });
   } catch (error: any) {
     console.error("[POST_AUTOMATION_ERROR]", error);
     return NextResponse.json({ success: false, error: "Failed to create automation" }, { status: 500 });

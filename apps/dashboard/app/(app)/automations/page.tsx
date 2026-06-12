@@ -17,13 +17,23 @@ export default async function AutomationsPage() {
 
   const tenantDb = getTenantClient(`tenant_${tenant.slug}`) as any;
   
-  const automations = await tenantDb.$queryRawUnsafe(`
-    SELECT a.*,
-           (SELECT COUNT(*) FROM automation_logs l WHERE l.automation_id = a.id AND l.status = 'SUCCESS') as success_count,
-           (SELECT COUNT(*) FROM automation_logs l WHERE l.automation_id = a.id AND l.status = 'FAILED') as fail_count
-    FROM automations a
-    ORDER BY a.created_at DESC;
-  `) as any[];
+  const rawAutomations = await tenantDb.automation.findMany({
+    include: {
+      automation_logs: {
+        select: { status: true }
+      }
+    },
+    orderBy: { created_at: 'desc' }
+  });
+
+  const automations = rawAutomations.map((a: any) => {
+    const logs = a.automation_logs || [];
+    return {
+      ...a,
+      success_count: logs.filter((l: any) => l.status === 'SUCCESS').length,
+      fail_count: logs.filter((l: any) => l.status === 'FAILED').length
+    };
+  });
 
   return (
     <div className="flex h-full flex-col space-y-6 p-8 bg-gray-50 min-h-screen">
@@ -44,7 +54,7 @@ export default async function AutomationsPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6">
-        {automations.map((automation) => (
+        {automations.map((automation: any) => (
           <div key={automation.id} className="bg-white border rounded-xl shadow-sm flex flex-col sm:flex-row group hover:shadow-md transition-shadow overflow-hidden">
             <div className="p-6 flex-1 flex flex-col sm:flex-row sm:items-center justify-between">
               

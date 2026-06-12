@@ -41,16 +41,17 @@ export async function POST(
     const lockId = `${staffId}:${startsAt}:${endsAt}`;
 
     // 2. DB check before Redis lock to ensure slot is truly available and not booked
-    const overlapping: any[] = await tenantDb.$queryRawUnsafe(`
-      SELECT 1 FROM bookings
-      WHERE staff_id = $3
-        AND status NOT IN ('CANCELLED', 'NO_SHOW')
-        AND starts_at < $2::timestamptz
-        AND ends_at > $1::timestamptz
-      LIMIT 1
-    `, startsAt, endsAt, staffId === 'no-staff' ? null : staffId);
+    const overlapping = await tenantDb.booking.findFirst({
+      where: {
+        staff_id: staffId === 'no-staff' ? null : staffId,
+        status: { notIn: ['CANCELLED', 'NO_SHOW'] },
+        starts_at: { lt: new Date(endsAt || '') },
+        ends_at: { gt: new Date(startsAt || '') }
+      },
+      select: { id: true }
+    });
 
-    if (overlapping.length > 0) {
+    if (overlapping) {
       return NextResponse.json(
         { success: false, error: 'This slot is no longer available' },
         { status: 409 }

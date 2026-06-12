@@ -150,7 +150,7 @@ export async function POST(request: Request) {
 
           // C. Update run stats
           await tenantDb.$executeRaw`
-            UPDATE automations SET run_count = run_count + 1, last_run_at = NOW() WHERE id = ${automation.id}::uuid;
+            UPDATE automations SET run_count = run_count + 1, last_run_at = NOW(), updated_at = NOW() WHERE id = ${automation.id}::uuid;
           `;
 
           // D. Log Success

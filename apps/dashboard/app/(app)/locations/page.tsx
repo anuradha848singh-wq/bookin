@@ -16,13 +16,15 @@ export default async function LocationsPage() {
 
   const tenantDb = getTenantClient(`tenant_${tenant.slug}`) as any;
   
-  const locations = await tenantDb.$queryRawUnsafe(`
-    SELECT l.*, 
-           (SELECT COUNT(*) FROM staff_working_hours swh WHERE swh.location_id = l.id) as staff_count
-    FROM locations l
-    WHERE l.deleted_at IS NULL
-    ORDER BY l.is_primary DESC, l.created_at ASC;
-  `) as any[];
+  const locations = await tenantDb.location.findMany({
+    where: { deleted_at: null },
+    include: {
+      _count: {
+        select: { staff_working_hours: true }
+      }
+    },
+    orderBy: [{ is_primary: 'desc' }, { created_at: 'asc' }]
+  });
 
   return (
     <div className="flex h-full flex-col space-y-6 p-8 bg-gray-50/50 min-h-screen">
@@ -40,7 +42,7 @@ export default async function LocationsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {locations.map(loc => (
+        {locations.map((loc: any) => (
           <div key={loc.id} className="bg-white border rounded-xl shadow-sm flex flex-col group hover:shadow-md transition-shadow overflow-hidden">
             <div className="h-24 bg-gradient-to-r from-blue-100 to-blue-50 flex items-center justify-center relative">
               <MapIcon className="w-10 h-10 text-blue-200" />
@@ -88,7 +90,7 @@ export default async function LocationsPage() {
             
             <div className="p-4 border-t bg-gray-50 flex items-center justify-between text-sm">
               <span className="text-gray-500 font-medium">
-                {Number(loc.staff_count)} Staff Assigned
+                {Number(loc._count.staff_working_hours)} Staff Assigned
               </span>
               <span className="px-2 py-1 bg-gray-200 text-gray-600 rounded text-xs font-medium">
                 {loc.timezone}

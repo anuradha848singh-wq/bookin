@@ -26,20 +26,22 @@ export default async function CRMPage({
   const limit = 25;
   const offset = (page - 1) * limit;
 
-  let sql = `SELECT * FROM clients WHERE deleted_at IS NULL`;
-  const params: any[] = [];
-  let pIdx = 1;
-
+  const whereClause: any = { deleted_at: null };
   if (search) {
-    sql += ` AND (first_name ILIKE $${pIdx} OR last_name ILIKE $${pIdx} OR email ILIKE $${pIdx} OR phone ILIKE $${pIdx})`;
-    params.push(`%${search}%`);
-    pIdx++;
+    whereClause.OR = [
+      { first_name: { contains: search, mode: 'insensitive' } },
+      { last_name: { contains: search, mode: 'insensitive' } },
+      { email: { contains: search, mode: 'insensitive' } },
+      { phone: { contains: search, mode: 'insensitive' } },
+    ];
   }
 
-  sql += ` ORDER BY created_at DESC LIMIT $${pIdx} OFFSET $${pIdx + 1}`;
-  params.push(limit, offset);
-
-  const clients = await tenantDb.$queryRawUnsafe(sql, ...params) as any[];
+  const clients = await tenantDb.client.findMany({
+    where: whereClause,
+    orderBy: { created_at: 'desc' },
+    take: limit,
+    skip: offset
+  });
 
   return (
     <div className="flex h-full flex-col space-y-6 p-8 bg-gray-50/50 min-h-screen">
@@ -100,7 +102,7 @@ export default async function CRMPage({
                   </td>
                 </tr>
               ) : (
-                clients.map((client) => (
+                clients.map((client: any) => (
                   <tr key={client.id} className="hover:bg-blue-50/50 transition-colors group">
                     <td className="px-6 py-4"><input type="checkbox" className="rounded border-gray-300" /></td>
                     <td className="px-6 py-4 font-medium text-gray-900 flex items-center space-x-3">

@@ -20,7 +20,17 @@ const tenantClients = globalForPrisma.tenantClients || new Map<string, { client:
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.tenantClients = tenantClients;
 }
-const MAX_TENANT_CLIENTS = 10;
+const MAX_TENANT_CLIENTS = 20;
+
+process.on("beforeExit", async () => {
+  if (publicClient) {
+    await publicClient.$disconnect().catch(console.error);
+  }
+  for (const [, entry] of tenantClients) {
+    await entry.client.$disconnect().catch(console.error);
+  }
+  tenantClients.clear();
+});
 
 // Helper to construct connection URL with specific schema and connection limit
 function getConnectionStringForSchema(schema: string): string {
@@ -78,9 +88,9 @@ export function getTenantClient(schemaName: string): PrismaClient {
     if (oldestKey) {
       const toDisconnect = tenantClients.get(oldestKey);
       if (toDisconnect) {
+        tenantClients.delete(oldestKey);
         toDisconnect.client.$disconnect().catch(console.error);
       }
-      tenantClients.delete(oldestKey);
     }
   }
 
@@ -125,6 +135,10 @@ export async function registerTenantAndCreateSchema(data: {
   const pc = getPublicClient();
   const slug = generateSlug(data.name);
   const tenantSchema = `tenant_${slug}`;
+
+  if (!/^[a-z0-9_-]+$/.test(tenantSchema)) {
+    throw new Error("Invalid schema name");
+  }
 
   console.log("Starting new tenant registration", { slug, email: data.email });
 
@@ -195,6 +209,10 @@ export async function registerTenantAndCreateSchema(data: {
           }
         }
       });
+
+      // 1.5. Ensure necessary Postgres extensions are active in the public schema
+      await tx.$executeRawUnsafe(`CREATE EXTENSION IF NOT EXISTS btree_gist WITH SCHEMA public;`);
+      await tx.$executeRawUnsafe(`CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA public;`);
 
       // 2. Create actual database schema using raw SQL
       await tx.$executeRawUnsafe(`CREATE SCHEMA IF NOT EXISTS "${tenantSchema}" AUTHORIZATION CURRENT_USER;`);

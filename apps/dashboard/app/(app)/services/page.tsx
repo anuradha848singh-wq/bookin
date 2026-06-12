@@ -18,14 +18,15 @@ export default async function ServicesPage() {
   const tenantDb = getTenantClient(`tenant_${tenant.slug}`) as any;
   
   // Fetch Categories
-  const categories = await tenantDb.$queryRawUnsafe(`
-    SELECT * FROM service_categories ORDER BY display_order ASC;
-  `) as any[];
+  const categories = await tenantDb.serviceCategory.findMany({
+    orderBy: { display_order: 'asc' }
+  });
 
   // Fetch Services
-  const services = await tenantDb.$queryRawUnsafe(`
-    SELECT * FROM services WHERE deleted_at IS NULL ORDER BY name ASC;
-  `) as any[];
+  const services = await tenantDb.service.findMany({
+    where: { deleted_at: null },
+    orderBy: { name: 'asc' }
+  });
 
   return (
     <div className="flex h-full flex-col space-y-6 p-8 bg-gray-50/50 min-h-screen">
@@ -54,8 +55,8 @@ export default async function ServicesPage() {
             <p className="text-gray-500 mt-1">Get started by creating your first service category.</p>
           </div>
         ) : (
-          categories.map((category) => {
-            const categoryServices = services.filter(s => s.category_id === category.id);
+          categories.map((category: any) => {
+            const categoryServices = services.filter((s: any) => s.category_id === category.id);
             return (
               <div key={category.id} className="bg-white border rounded-xl shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b bg-gray-50/50 flex justify-between items-center">
@@ -71,7 +72,7 @@ export default async function ServicesPage() {
                   {categoryServices.length === 0 ? (
                     <div className="p-6 text-center text-sm text-gray-500">No services in this category.</div>
                   ) : (
-                    categoryServices.map(service => (
+                    categoryServices.map((service: any) => (
                       <div key={service.id} className="p-6 flex items-start justify-between hover:bg-gray-50 transition-colors group">
                         <div>
                           <h3 className="text-base font-medium text-gray-900 group-hover:text-blue-600 transition-colors">

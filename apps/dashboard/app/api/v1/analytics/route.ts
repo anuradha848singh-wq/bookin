@@ -38,11 +38,6 @@ export const GET = withTenantAuth(async (request, { tenantDb }) => {
     prevFromDate = new Date(fromDate.getTime() - periodLength);
     prevToDate = fromDate;
 
-    const fromStr = fromDate.toISOString();
-    const toStr = toDate.toISOString();
-    const prevFromStr = prevFromDate.toISOString();
-    const prevToStr = prevToDate.toISOString();
-
     // ─── Run all queries in parallel ───────────────────────────────────────────
 
     const [
@@ -59,7 +54,7 @@ export const GET = withTenantAuth(async (request, { tenantDb }) => {
     ] = await Promise.all([
 
       // Current period: core KPIs
-      tenantDb.$queryRawUnsafe<any[]>(`
+      tenantDb.$queryRaw<any[]>`
         SELECT
           COUNT(*) as total_bookings,
           COUNT(*) FILTER (WHERE status = 'COMPLETED') as completed_bookings,
@@ -71,43 +66,43 @@ export const GET = withTenantAuth(async (request, { tenantDb }) => {
           COALESCE(AVG(price) FILTER (WHERE status NOT IN ('CANCELLED')), 0) as avg_booking_value,
           COUNT(DISTINCT client_id) as unique_clients
         FROM bookings
-        WHERE starts_at >= $1::timestamptz AND starts_at < $2::timestamptz;
-      `, fromStr, toStr),
+        WHERE starts_at >= ${fromDate} AND starts_at < ${toDate};
+      `,
 
       // Previous period: same KPIs for trend comparison
-      tenantDb.$queryRawUnsafe<any[]>(`
+      tenantDb.$queryRaw<any[]>`
         SELECT
           COUNT(*) as total_bookings,
           COALESCE(SUM(price) FILTER (WHERE status NOT IN ('CANCELLED')), 0) as gross_revenue,
           COUNT(DISTINCT client_id) as unique_clients
         FROM bookings
-        WHERE starts_at >= $1::timestamptz AND starts_at < $2::timestamptz;
-      `, prevFromStr, prevToStr),
+        WHERE starts_at >= ${prevFromDate} AND starts_at < ${prevToDate};
+      `,
 
       // Bookings per day (for line chart)
-      tenantDb.$queryRawUnsafe<any[]>(`
+      tenantDb.$queryRaw<any[]>`
         SELECT
           DATE(starts_at AT TIME ZONE 'UTC') as date,
           COUNT(*) as bookings,
           COUNT(*) FILTER (WHERE status = 'COMPLETED') as completed,
           COUNT(*) FILTER (WHERE status = 'CANCELLED') as cancelled
         FROM bookings
-        WHERE starts_at >= $1::timestamptz AND starts_at < $2::timestamptz
+        WHERE starts_at >= ${fromDate} AND starts_at < ${toDate}
         GROUP BY DATE(starts_at AT TIME ZONE 'UTC')
         ORDER BY date ASC;
-      `, fromStr, toStr),
+      `,
 
       // Status breakdown (for pie/donut chart)
-      tenantDb.$queryRawUnsafe<any[]>(`
+      tenantDb.$queryRaw<any[]>`
         SELECT status, COUNT(*) as count
         FROM bookings
-        WHERE starts_at >= $1::timestamptz AND starts_at < $2::timestamptz
+        WHERE starts_at >= ${fromDate} AND starts_at < ${toDate}
         GROUP BY status
         ORDER BY count DESC;
-      `, fromStr, toStr),
+      `,
 
       // Top services by bookings and revenue
-      tenantDb.$queryRawUnsafe<any[]>(`
+      tenantDb.$queryRaw<any[]>`
         SELECT
           s.name as service_name,
           s.price as unit_price,
@@ -117,14 +112,14 @@ export const GET = withTenantAuth(async (request, { tenantDb }) => {
           COUNT(b.id) FILTER (WHERE b.status = 'COMPLETED') as completed_count
         FROM bookings b
         INNER JOIN services s ON b.service_id = s.id
-        WHERE b.starts_at >= $1::timestamptz AND b.starts_at < $2::timestamptz
+        WHERE b.starts_at >= ${fromDate} AND b.starts_at < ${toDate}
         GROUP BY s.id, s.name, s.price
         ORDER BY booking_count DESC
         LIMIT 8;
-      `, fromStr, toStr),
+      `,
 
       // Top staff by bookings
-      tenantDb.$queryRawUnsafe<any[]>(`
+      tenantDb.$queryRaw<any[]>`
         SELECT
           COALESCE(st.first_name || ' ' || st.last_name, 'Unassigned') as staff_name,
           COUNT(b.id) as booking_count,
@@ -136,38 +131,38 @@ export const GET = withTenantAuth(async (request, { tenantDb }) => {
           ) as completion_rate
         FROM bookings b
         LEFT JOIN staff st ON b.staff_id = st.id
-        WHERE b.starts_at >= $1::timestamptz AND b.starts_at < $2::timestamptz
+        WHERE b.starts_at >= ${fromDate} AND b.starts_at < ${toDate}
         GROUP BY st.id, st.first_name, st.last_name
         ORDER BY booking_count DESC
         LIMIT 8;
-      `, fromStr, toStr),
+      `,
 
       // New vs returning clients
-      tenantDb.$queryRawUnsafe<any[]>(`
+      tenantDb.$queryRaw<any[]>`
         SELECT
           DATE(c.created_at AT TIME ZONE 'UTC') as date,
           COUNT(*) as new_clients
         FROM clients c
-        WHERE c.created_at >= $1::timestamptz AND c.created_at < $2::timestamptz
+        WHERE c.created_at >= ${fromDate} AND c.created_at < ${toDate}
           AND c.deleted_at IS NULL
         GROUP BY DATE(c.created_at AT TIME ZONE 'UTC')
         ORDER BY date ASC;
-      `, fromStr, toStr),
+      `,
 
       // Revenue per day (for area chart)
-      tenantDb.$queryRawUnsafe<any[]>(`
+      tenantDb.$queryRaw<any[]>`
         SELECT
           DATE(starts_at AT TIME ZONE 'UTC') as date,
           COALESCE(SUM(price) FILTER (WHERE status NOT IN ('CANCELLED')), 0) as gross_revenue,
           COALESCE(SUM(total_paid), 0) as collected_revenue
         FROM bookings
-        WHERE starts_at >= $1::timestamptz AND starts_at < $2::timestamptz
+        WHERE starts_at >= ${fromDate} AND starts_at < ${toDate}
         GROUP BY DATE(starts_at AT TIME ZONE 'UTC')
         ORDER BY date ASC;
-      `, fromStr, toStr),
+      `,
 
       // Client retention: how many clients booked more than once
-      tenantDb.$queryRawUnsafe<any[]>(`
+      tenantDb.$queryRaw<any[]>`
         SELECT
           COUNT(*) FILTER (WHERE booking_count = 1) as first_time_clients,
           COUNT(*) FILTER (WHERE booking_count > 1) as returning_clients,
@@ -180,10 +175,10 @@ export const GET = withTenantAuth(async (request, { tenantDb }) => {
           WHERE status NOT IN ('CANCELLED')
           GROUP BY client_id
         ) client_stats;
-      `),
+      `,
 
       // Recent bookings list
-      tenantDb.$queryRawUnsafe<any[]>(`
+      tenantDb.$queryRaw<any[]>`
         SELECT
           b.id, b.reference_number, b.status, b.payment_status,
           b.starts_at, b.ends_at, b.price, b.total_paid,
@@ -194,10 +189,10 @@ export const GET = withTenantAuth(async (request, { tenantDb }) => {
         LEFT JOIN clients c ON b.client_id = c.id
         LEFT JOIN services s ON b.service_id = s.id
         LEFT JOIN staff st ON b.staff_id = st.id
-        WHERE b.starts_at >= $1::timestamptz
+        WHERE b.starts_at >= ${fromDate}
         ORDER BY b.starts_at DESC
         LIMIT 20;
-      `, fromStr),
+      `,
     ]);
 
     // Calculate trends (percentage change vs previous period)
@@ -215,7 +210,7 @@ export const GET = withTenantAuth(async (request, { tenantDb }) => {
 
     return NextResponse.json({
       success: true,
-      period: { from: fromStr, to: toStr },
+      period: { from: fromDate.toISOString(), to: toDate.toISOString() },
       kpis: {
         totalBookings: Number(current.total_bookings || 0),
         completedBookings: Number(current.completed_bookings || 0),

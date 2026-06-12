@@ -18,13 +18,15 @@ export default async function FormsPage() {
 
   const tenantDb = getTenantClient(`tenant_${tenant.slug}`) as any;
   
-  const forms = await tenantDb.$queryRawUnsafe(`
-    SELECT f.*, 
-           (SELECT COUNT(*) FROM form_submissions fs WHERE fs.form_id = f.id) as submission_count
-    FROM forms f
-    WHERE f.deleted_at IS NULL
-    ORDER BY f.created_at DESC;
-  `) as any[];
+  const forms = await tenantDb.form.findMany({
+    where: { deleted_at: null },
+    include: {
+      _count: {
+        select: { form_submissions: true }
+      }
+    },
+    orderBy: { created_at: 'desc' }
+  });
 
   return (
     <div className="flex h-full flex-col space-y-6 p-8 bg-gray-50/50 min-h-screen">
@@ -42,7 +44,7 @@ export default async function FormsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {forms.map(form => (
+        {forms.map((form: any) => (
           <div key={form.id} className="bg-white border rounded-xl shadow-sm flex flex-col group hover:shadow-md transition-shadow">
             <div className="p-6 border-b flex items-start justify-between">
               <div className="flex items-center space-x-3">
@@ -64,7 +66,7 @@ export default async function FormsPage() {
             <div className="p-4 border-t flex items-center justify-between text-sm">
               <span className="flex items-center text-gray-500 font-medium">
                 <FileCheckIcon className="w-4 h-4 mr-1.5 text-green-500" />
-                {Number(form.submission_count)} Submissions
+                {Number(form._count.form_submissions)} Submissions
               </span>
               <span className="text-gray-400 text-xs">
                 {form.is_required ? "Required" : "Optional"}

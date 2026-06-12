@@ -91,21 +91,25 @@ export async function POST(request: NextRequest) {
     await clearOTP(phone);
 
     try {
-      // Create or find patient by phone using raw SQL (patient -> client)
-      let clients: any[] = await tenantDb.$queryRawUnsafe(`
-        SELECT id FROM clients WHERE phone = $1 AND deleted_at IS NULL LIMIT 1
-      `, phone);
+      // Create or find patient by phone using ORM
+      let client = await tenantDb.client.findFirst({
+        where: { phone, deleted_at: null },
+        select: { id: true }
+      });
 
       let clientId;
-      if (clients.length > 0) {
-        clientId = clients[0].id;
+      if (client) {
+        clientId = client.id;
       } else {
-        const newClients: any[] = await tenantDb.$queryRawUnsafe(`
-          INSERT INTO clients (first_name, last_name, phone)
-          VALUES ('Anonymous', 'Client', $1)
-          RETURNING id
-        `, phone);
-        clientId = newClients[0].id;
+        const newClient = await tenantDb.client.create({
+          data: {
+            first_name: 'Anonymous',
+            last_name: 'Client',
+            phone
+          },
+          select: { id: true }
+        });
+        clientId = newClient.id;
       }
 
       // Generate a reference number (e.g. BK-2024-XXXXX)
@@ -114,24 +118,25 @@ export async function POST(request: NextRequest) {
       const referenceNumber = `BK-${year}-${randomPart}`;
 
       // Insert booking and check for overlap in a single statement
-      const result: any[] = await tenantDb.$queryRawUnsafe(`
+      const { Prisma } = await import('@prisma/client');
+      const result: any[] = await tenantDb.$queryRaw(Prisma.sql`
         WITH overlapping AS (
           SELECT 1 FROM bookings
-          WHERE staff_id = $3
+          WHERE staff_id = ${staffId ? staffId : null}::uuid
             AND status NOT IN ('CANCELLED', 'NO_SHOW')
-            AND starts_at < $2::timestamptz
-            AND ends_at > $1::timestamptz
+            AND starts_at < ${endsAt}::timestamptz
+            AND ends_at > ${startsAt}::timestamptz
         )
         INSERT INTO bookings (
           reference_number, client_id, service_id, staff_id,
           starts_at, ends_at, duration_minutes, status, created_by, source
         )
-        SELECT $4, $5, $6, $3, $1::timestamptz, $2::timestamptz,
-               EXTRACT(EPOCH FROM ($2::timestamptz - $1::timestamptz)) / 60,
+        SELECT ${referenceNumber}, ${clientId}::uuid, ${serviceId}::uuid, ${staffId ? staffId : null}::uuid, ${startsAt}::timestamptz, ${endsAt}::timestamptz,
+               EXTRACT(EPOCH FROM (${endsAt}::timestamptz - ${startsAt}::timestamptz)) / 60,
                'CONFIRMED', 'CLIENT', 'BOOKING_PORTAL'
         WHERE NOT EXISTS (SELECT 1 FROM overlapping)
         RETURNING id, reference_number, starts_at, ends_at, status
-      `, startsAt, endsAt, staffId || null, referenceNumber, clientId, serviceId);
+      `);
 
       if (result.length === 0) {
         throw new Error('SLOT_TAKEN');

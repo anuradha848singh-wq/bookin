@@ -17,9 +17,13 @@ export default async function StaffPage() {
 
   const tenantDb = getTenantClient(`tenant_${tenant.slug}`) as any;
   
-  const staffList = await tenantDb.$queryRawUnsafe(`
-    SELECT * FROM staff WHERE deleted_at IS NULL ORDER BY display_order ASC, first_name ASC;
-  `) as any[];
+  const staffList = await tenantDb.staff.findMany({
+    where: { deleted_at: null },
+    orderBy: [
+      { display_order: 'asc' },
+      { first_name: 'asc' }
+    ]
+  });
 
   return (
     <div className="flex h-full flex-col space-y-6 p-8 bg-gray-50/50 min-h-screen">
@@ -37,7 +41,7 @@ export default async function StaffPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {staffList.map(staff => (
+        {staffList.map((staff: any) => (
           <div key={staff.id} className="bg-white border rounded-xl shadow-sm overflow-hidden flex flex-col">
             <div className="p-6 flex items-start space-x-4 border-b bg-gray-50/50">
               {staff.avatar_url ? (

@@ -37,14 +37,12 @@ export const PUT = withTenantAuth(async (request, { tenantDb }, params) => {
   }
 
   try {
-    // Wrap in a transaction to overwrite existing schedule safely
-    // Prisma raw queries inside transactions can be tricky with PgBouncer, 
-    // but we can execute them sequentially.
+    const operations: any[] = [];
     
-    await tenantDb.$executeRaw`DELETE FROM staff_working_hours WHERE staff_id = ${id}::uuid`;
+    operations.push(tenantDb.$executeRaw`DELETE FROM staff_working_hours WHERE staff_id = ${id}::uuid`);
 
     for (const day of schedule) {
-      await tenantDb.$executeRaw`
+      operations.push(tenantDb.$executeRaw`
         INSERT INTO staff_working_hours (
           staff_id, location_id, day_of_week, is_day_off, 
           start_time, end_time, break_start, break_end
@@ -53,8 +51,10 @@ export const PUT = withTenantAuth(async (request, { tenantDb }, params) => {
           ${day.start_time ? Prisma.sql`${day.start_time}::time` : null}, ${day.end_time ? Prisma.sql`${day.end_time}::time` : null}, 
           ${day.break_start ? Prisma.sql`${day.break_start}::time` : null}, ${day.break_end ? Prisma.sql`${day.break_end}::time` : null}
         );
-      `;
+      `);
     }
+
+    await tenantDb.$transaction(operations);
 
     const updatedHours = await tenantDb.$queryRaw`
       SELECT * FROM staff_working_hours WHERE staff_id = ${id}::uuid ORDER BY day_of_week ASC;

@@ -8,16 +8,16 @@ export async function getPaymentGateway(
 ): Promise<IPaymentGateway> {
   const tenantDb = getTenantClient(`tenant_${tenantSlug}`) as any;
   
-  const configs = await tenantDb.$queryRawUnsafe(`
-    SELECT credentials, is_active FROM tenant_payment_configs 
-    WHERE gateway_name = $1 AND is_active = true LIMIT 1;
-  `, gatewayName) as any[];
+  const config = await tenantDb.tenantPaymentConfig.findFirst({
+    where: { gateway_name: gatewayName, is_active: true },
+    select: { credentials: true }
+  });
 
-  if (configs.length === 0) {
+  if (!config) {
     throw new Error(`Payment Gateway ${gatewayName} is not configured or is inactive for this tenant.`);
   }
 
-  const { credentials } = configs[0];
+  const { credentials } = config as any;
 
   switch (gatewayName) {
     case 'STRIPE':

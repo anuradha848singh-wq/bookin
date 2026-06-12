@@ -16,20 +16,27 @@ export default async function OrdersPage() {
 
   const tenantDb = getTenantClient(`tenant_${tenant.slug}`) as any;
   
-  const orders = await tenantDb.$queryRawUnsafe(`
-    SELECT o.*,
-           c.first_name, c.last_name, c.email,
-           (SELECT json_agg(i.*) FROM order_items i WHERE i.order_id = o.id) as items
-    FROM orders o
-    LEFT JOIN clients c ON o.client_id = c.id
-    ORDER BY o.created_at DESC;
-  `) as any[];
+  const rawOrders = await tenantDb.order.findMany({
+    include: {
+      client: { select: { first_name: true, last_name: true, email: true } },
+      order_items: true
+    },
+    orderBy: { created_at: 'desc' }
+  });
+
+  const orders = rawOrders.map((o: any) => ({
+    ...o,
+    first_name: o.client?.first_name,
+    last_name: o.client?.last_name,
+    email: o.client?.email,
+    items: o.order_items || []
+  }));
 
   // Group by status for the Kanban board
   const columns = {
-    'PENDING': orders.filter(o => o.status === 'PENDING'),
-    'PROCESSING': orders.filter(o => o.status === 'PROCESSING'),
-    'SHIPPED': orders.filter(o => o.status === 'SHIPPED'),
+    'PENDING': orders.filter((o: any) => o.status === 'PENDING'),
+    'PROCESSING': orders.filter((o: any) => o.status === 'PROCESSING'),
+    'SHIPPED': orders.filter((o: any) => o.status === 'SHIPPED'),
   };
 
   return (

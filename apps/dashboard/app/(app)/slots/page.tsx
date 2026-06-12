@@ -86,7 +86,7 @@ export default function SlotTesterPage() {
             className="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm p-2 border bg-white"
           >
             <option value="">-- Select Service --</option>
-            {services.map(s => (
+            {services.map((s: any) => (
               <option key={s.id} value={s.id}>{s.name} ({s.duration_minutes}m)</option>
             ))}
           </select>
@@ -100,7 +100,7 @@ export default function SlotTesterPage() {
             className="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm p-2 border bg-white"
           >
             <option value="">Any Available Staff</option>
-            {staff.map(s => (
+            {staff.map((s: any) => (
               <option key={s.id} value={s.id}>{s.first_name} {s.last_name}</option>
             ))}
           </select>

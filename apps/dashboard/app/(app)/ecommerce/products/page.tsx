@@ -17,16 +17,24 @@ export default async function ProductsPage() {
 
   const tenantDb = getTenantClient(`tenant_${tenant.slug}`) as any;
   
-  const products = await tenantDb.$queryRawUnsafe(`
-    SELECT p.*,
-           c.name as category_name,
-           (SELECT COUNT(*) FROM product_variants v WHERE v.product_id = p.id) as variant_count,
-           (SELECT COALESCE(SUM(stock_count), 0) FROM product_variants v WHERE v.product_id = p.id) as total_stock,
-           (SELECT MIN(price) FROM product_variants v WHERE v.product_id = p.id) as starting_price
-    FROM products p
-    LEFT JOIN product_categories c ON p.category_id = c.id
-    ORDER BY p.created_at DESC;
-  `) as any[];
+  const rawProducts = await tenantDb.product.findMany({
+    include: {
+      category: { select: { name: true } },
+      variants: { select: { stock_count: true, price: true } }
+    },
+    orderBy: { created_at: 'desc' }
+  });
+
+  const products = rawProducts.map((p: any) => {
+    const variants = p.variants || [];
+    return {
+      ...p,
+      category_name: p.category?.name,
+      variant_count: variants.length,
+      total_stock: variants.reduce((sum: number, v: any) => sum + Number(v.stock_count || 0), 0),
+      starting_price: variants.length > 0 ? Math.min(...variants.map((v: any) => Number(v.price || 0))) : null
+    };
+  });
 
   return (
     <div className="flex h-full flex-col space-y-6 p-8 bg-gray-50 min-h-screen">
@@ -79,7 +87,7 @@ export default async function ProductsPage() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {products.map((product) => (
+            {products.map((product: any) => (
               <tr key={product.id} className="hover:bg-gray-50 cursor-pointer transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">

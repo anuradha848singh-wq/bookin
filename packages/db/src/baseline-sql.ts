@@ -58,6 +58,7 @@ CREATE TABLE locations (
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+CREATE INDEX idx_locations_active ON locations(is_active) WHERE deleted_at IS NULL;
 
 -- ─────────────────────────────────────────────
 -- SERVICE CATEGORIES
@@ -150,6 +151,7 @@ CREATE TABLE staff (
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+CREATE INDEX idx_staff_accepting ON staff(is_accepting_bookings) WHERE deleted_at IS NULL;
 
 -- ─────────────────────────────────────────────
 -- STAFF–SERVICE MAPPING (Which staff can perform which services)
@@ -238,6 +240,8 @@ CREATE INDEX idx_bookings_starts_at ON bookings(starts_at);
 CREATE INDEX idx_bookings_status ON bookings(status);
 CREATE INDEX idx_bookings_date_range ON bookings(starts_at, ends_at);
 CREATE INDEX idx_bookings_reference ON bookings(reference_number);
+CREATE INDEX idx_bookings_staff_status_time ON bookings(staff_id, status, starts_at, ends_at) WHERE status NOT IN ('CANCELLED', 'NO_SHOW');
+CREATE INDEX idx_bookings_client_time ON bookings(client_id, starts_at DESC);
 
 -- ─────────────────────────────────────────────
 -- CONSTRAINTS
@@ -275,6 +279,7 @@ CREATE TABLE booking_status_history (
   metadata    JSONB,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+CREATE INDEX idx_booking_status_history_booking_created ON booking_status_history(booking_id, created_at);
 
 -- ─────────────────────────────────────────────
 -- FORMS (Phase 7)
@@ -364,6 +369,7 @@ CREATE TABLE notifications_log (
   error       TEXT,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+CREATE INDEX idx_notification_log_created ON notifications_log(created_at);
 
 -- ─────────────────────────────────────────────
 -- CLIENT NOTES (CRM Module)
@@ -524,6 +530,7 @@ CREATE TABLE automation_logs (
 CREATE INDEX idx_automation_logs_automation ON automation_logs(automation_id);
 CREATE INDEX idx_automation_logs_status ON automation_logs(status);
 CREATE INDEX idx_automation_logs_created ON automation_logs(created_at DESC);
+CREATE INDEX idx_automation_logs_auto_created ON automation_logs(automation_id, created_at DESC);
 
 -- ─────────────────────────────────────────────
 -- TENANT PAYMENT CONFIGS (Phase 11 - Payments)

@@ -21,15 +21,27 @@ export async function GET(request: NextRequest) {
     }
 
     const tenantDb = getTenantClient(`tenant_${clinic.slug}`) as any;
-    const services = await tenantDb.$queryRawUnsafe(`
-      SELECT s.id, s.name, s.duration_minutes, s.price, s.short_description,
-             s.requires_deposit, s.deposit_amount, s.color, s.image_url,
-             c.name as category_name, c.color as category_color
-      FROM services s
-      LEFT JOIN service_categories c ON s.category_id = c.id
-      WHERE s.is_public = true AND s.deleted_at IS NULL
-      ORDER BY c.display_order ASC, s.created_at ASC;
-    `);
+    const rawServices = await tenantDb.service.findMany({
+      where: { is_public: true, deleted_at: null },
+      select: {
+        id: true, name: true, duration_minutes: true, price: true, short_description: true,
+        requires_deposit: true, deposit_amount: true, color: true, image_url: true,
+        category: {
+          select: { name: true, color: true, display_order: true }
+        }
+      },
+      orderBy: [
+        { category: { display_order: 'asc' } },
+        { created_at: 'asc' }
+      ]
+    });
+
+    const services = rawServices.map((s: any) => ({
+      ...s,
+      category_name: s.category?.name,
+      category_color: s.category?.color,
+      category: undefined
+    }));
 
     return NextResponse.json({ success: true, services });
   } catch (error: any) {

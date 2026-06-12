@@ -27,44 +27,26 @@ export const GET = withTenantAuth(async (request, { tenantDb }) => {
     ];
   }
 
-  // The client table is generated dynamically, so Prisma handles this via raw or standard client wrapper
-  // Note: The global schema doesn't define `client`, but our tenant SQL generated it. 
-  // Wait, Prisma doesn't know about `tenantDb.client` because it's not in schema.prisma!
-  // We must use $queryRawUnsafe or $executeRawUnsafe to interact with tenant tables because they are created in raw SQL!
-
   const offset = (page - 1) * limit;
 
   try {
-    const conditions: Prisma.Sql[] = [Prisma.sql`deleted_at IS NULL`];
-
-    if (search) {
-      const searchParam = `%${search}%`;
-      conditions.push(Prisma.sql`(first_name ILIKE ${searchParam} OR last_name ILIKE ${searchParam} OR email ILIKE ${searchParam} OR phone ILIKE ${searchParam})`);
-    }
-
-    if (tags && tags.length > 0) {
-      conditions.push(Prisma.sql`tags @> ${tags}`);
-    }
-
-    const whereClause = Prisma.sql`${Prisma.join(conditions, ' AND ')}`;
-
-    const clients = await tenantDb.$queryRaw`
-      SELECT * FROM clients 
-      WHERE ${whereClause}
-      ORDER BY created_at DESC 
-      LIMIT ${limit} OFFSET ${offset}
-    ` as any[];
+    const clients = await tenantDb.client.findMany({
+      where: queryWhere,
+      orderBy: { created_at: 'desc' },
+      take: limit,
+      skip: offset
+    });
     
     // Get total count
-    const totalCount: any = await tenantDb.$queryRaw`
-      SELECT COUNT(*) FROM clients WHERE ${whereClause}
-    `;
+    const totalCount = await tenantDb.client.count({
+      where: queryWhere
+    });
 
     return NextResponse.json({ 
       success: true, 
       clients, 
       pagination: {
-        total: Number(totalCount[0].count),
+        total: totalCount,
         page,
         limit
       }
@@ -87,18 +69,22 @@ export const POST = withTenantAuth(async (request, { tenantDb }) => {
   }
 
   try {
-    const newClient = await tenantDb.$queryRaw`
-      INSERT INTO clients (
-        first_name, last_name, email, phone, date_of_birth, gender, 
-        tags, custom_fields, source, referrer_client_id
-      ) VALUES (
-        ${first_name}, ${last_name}, ${email || null}, ${phone || null}, 
-        ${date_of_birth ? new Date(date_of_birth) : null}, ${gender || null},
-        ${tags || []}, ${custom_fields || {}}::jsonb, ${source || null}, ${referrer_client_id ? Prisma.sql`${referrer_client_id}::uuid` : null}
-      ) RETURNING *;
-    `;
+    const newClient = await tenantDb.client.create({
+      data: {
+        first_name,
+        last_name,
+        email: email || null,
+        phone: phone || null,
+        date_of_birth: date_of_birth ? new Date(date_of_birth) : null,
+        gender: gender || null,
+        tags: tags || [],
+        custom_fields: custom_fields || {},
+        source: source || null,
+        referrer_client_id: referrer_client_id || null
+      }
+    });
 
-    return NextResponse.json({ success: true, client: (newClient as any)[0] });
+    return NextResponse.json({ success: true, client: newClient });
   } catch (error: any) {
     if (error.code === '23505') { // Unique violation Postgres
       return NextResponse.json({ error: "Client with this email/phone already exists" }, { status: 409 });
